@@ -1,0 +1,458 @@
+
+Ethernet_to_Serial.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         0000026a  00000000  00000000  00000054  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .comment      00000030  00000000  00000000  000002be  2**0
+                  CONTENTS, READONLY
+  2 .debug_aranges 00000048  00000000  00000000  000002ee  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  3 .debug_info   00000575  00000000  00000000  00000336  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  4 .debug_abbrev 00000168  00000000  00000000  000008ab  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  5 .debug_line   000002dd  00000000  00000000  00000a13  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .debug_frame  000000c4  00000000  00000000  00000cf0  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_str    000001ef  00000000  00000000  00000db4  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  8 .debug_loc    00000304  00000000  00000000  00000fa3  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_ranges 00000038  00000000  00000000  000012a7  2**0
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	65 c0       	rjmp	.+202    	; 0xcc <__ctors_end>
+   2:	00 00       	nop
+   4:	6d c0       	rjmp	.+218    	; 0xe0 <__bad_interrupt>
+   6:	00 00       	nop
+   8:	6b c0       	rjmp	.+214    	; 0xe0 <__bad_interrupt>
+   a:	00 00       	nop
+   c:	69 c0       	rjmp	.+210    	; 0xe0 <__bad_interrupt>
+   e:	00 00       	nop
+  10:	67 c0       	rjmp	.+206    	; 0xe0 <__bad_interrupt>
+  12:	00 00       	nop
+  14:	65 c0       	rjmp	.+202    	; 0xe0 <__bad_interrupt>
+  16:	00 00       	nop
+  18:	63 c0       	rjmp	.+198    	; 0xe0 <__bad_interrupt>
+  1a:	00 00       	nop
+  1c:	61 c0       	rjmp	.+194    	; 0xe0 <__bad_interrupt>
+  1e:	00 00       	nop
+  20:	5f c0       	rjmp	.+190    	; 0xe0 <__bad_interrupt>
+  22:	00 00       	nop
+  24:	5d c0       	rjmp	.+186    	; 0xe0 <__bad_interrupt>
+  26:	00 00       	nop
+  28:	5b c0       	rjmp	.+182    	; 0xe0 <__bad_interrupt>
+  2a:	00 00       	nop
+  2c:	59 c0       	rjmp	.+178    	; 0xe0 <__bad_interrupt>
+  2e:	00 00       	nop
+  30:	57 c0       	rjmp	.+174    	; 0xe0 <__bad_interrupt>
+  32:	00 00       	nop
+  34:	55 c0       	rjmp	.+170    	; 0xe0 <__bad_interrupt>
+  36:	00 00       	nop
+  38:	53 c0       	rjmp	.+166    	; 0xe0 <__bad_interrupt>
+  3a:	00 00       	nop
+  3c:	51 c0       	rjmp	.+162    	; 0xe0 <__bad_interrupt>
+  3e:	00 00       	nop
+  40:	4f c0       	rjmp	.+158    	; 0xe0 <__bad_interrupt>
+  42:	00 00       	nop
+  44:	4d c0       	rjmp	.+154    	; 0xe0 <__bad_interrupt>
+  46:	00 00       	nop
+  48:	4b c0       	rjmp	.+150    	; 0xe0 <__bad_interrupt>
+  4a:	00 00       	nop
+  4c:	49 c0       	rjmp	.+146    	; 0xe0 <__bad_interrupt>
+  4e:	00 00       	nop
+  50:	47 c0       	rjmp	.+142    	; 0xe0 <__bad_interrupt>
+  52:	00 00       	nop
+  54:	45 c0       	rjmp	.+138    	; 0xe0 <__bad_interrupt>
+  56:	00 00       	nop
+  58:	43 c0       	rjmp	.+134    	; 0xe0 <__bad_interrupt>
+  5a:	00 00       	nop
+  5c:	41 c0       	rjmp	.+130    	; 0xe0 <__bad_interrupt>
+  5e:	00 00       	nop
+  60:	3f c0       	rjmp	.+126    	; 0xe0 <__bad_interrupt>
+  62:	00 00       	nop
+  64:	3d c0       	rjmp	.+122    	; 0xe0 <__bad_interrupt>
+  66:	00 00       	nop
+  68:	3b c0       	rjmp	.+118    	; 0xe0 <__bad_interrupt>
+  6a:	00 00       	nop
+  6c:	39 c0       	rjmp	.+114    	; 0xe0 <__bad_interrupt>
+  6e:	00 00       	nop
+  70:	37 c0       	rjmp	.+110    	; 0xe0 <__bad_interrupt>
+  72:	00 00       	nop
+  74:	35 c0       	rjmp	.+106    	; 0xe0 <__bad_interrupt>
+  76:	00 00       	nop
+  78:	33 c0       	rjmp	.+102    	; 0xe0 <__bad_interrupt>
+  7a:	00 00       	nop
+  7c:	31 c0       	rjmp	.+98     	; 0xe0 <__bad_interrupt>
+  7e:	00 00       	nop
+  80:	2f c0       	rjmp	.+94     	; 0xe0 <__bad_interrupt>
+  82:	00 00       	nop
+  84:	2d c0       	rjmp	.+90     	; 0xe0 <__bad_interrupt>
+  86:	00 00       	nop
+  88:	2b c0       	rjmp	.+86     	; 0xe0 <__bad_interrupt>
+  8a:	00 00       	nop
+  8c:	29 c0       	rjmp	.+82     	; 0xe0 <__bad_interrupt>
+  8e:	00 00       	nop
+  90:	27 c0       	rjmp	.+78     	; 0xe0 <__bad_interrupt>
+  92:	00 00       	nop
+  94:	25 c0       	rjmp	.+74     	; 0xe0 <__bad_interrupt>
+  96:	00 00       	nop
+  98:	23 c0       	rjmp	.+70     	; 0xe0 <__bad_interrupt>
+  9a:	00 00       	nop
+  9c:	21 c0       	rjmp	.+66     	; 0xe0 <__bad_interrupt>
+  9e:	00 00       	nop
+  a0:	1f c0       	rjmp	.+62     	; 0xe0 <__bad_interrupt>
+  a2:	00 00       	nop
+  a4:	1d c0       	rjmp	.+58     	; 0xe0 <__bad_interrupt>
+  a6:	00 00       	nop
+  a8:	1b c0       	rjmp	.+54     	; 0xe0 <__bad_interrupt>
+  aa:	00 00       	nop
+  ac:	19 c0       	rjmp	.+50     	; 0xe0 <__bad_interrupt>
+  ae:	00 00       	nop
+  b0:	17 c0       	rjmp	.+46     	; 0xe0 <__bad_interrupt>
+  b2:	00 00       	nop
+  b4:	15 c0       	rjmp	.+42     	; 0xe0 <__bad_interrupt>
+  b6:	00 00       	nop
+  b8:	13 c0       	rjmp	.+38     	; 0xe0 <__bad_interrupt>
+  ba:	00 00       	nop
+  bc:	11 c0       	rjmp	.+34     	; 0xe0 <__bad_interrupt>
+  be:	00 00       	nop
+  c0:	0f c0       	rjmp	.+30     	; 0xe0 <__bad_interrupt>
+  c2:	00 00       	nop
+  c4:	0d c0       	rjmp	.+26     	; 0xe0 <__bad_interrupt>
+  c6:	00 00       	nop
+  c8:	0b c0       	rjmp	.+22     	; 0xe0 <__bad_interrupt>
+	...
+
+000000cc <__ctors_end>:
+  cc:	11 24       	eor	r1, r1
+  ce:	1f be       	out	0x3f, r1	; 63
+  d0:	cf ef       	ldi	r28, 0xFF	; 255
+  d2:	d1 e2       	ldi	r29, 0x21	; 33
+  d4:	de bf       	out	0x3e, r29	; 62
+  d6:	cd bf       	out	0x3d, r28	; 61
+  d8:	00 e0       	ldi	r16, 0x00	; 0
+  da:	0c bf       	out	0x3c, r16	; 60
+  dc:	ac d0       	rcall	.+344    	; 0x236 <main>
+  de:	c3 c0       	rjmp	.+390    	; 0x266 <_exit>
+
+000000e0 <__bad_interrupt>:
+  e0:	8f cf       	rjmp	.-226    	; 0x0 <__vectors>
+
+000000e2 <SPItransfer>:
+#define MISO_PIN 3
+
+
+uint8_t SPItransfer(uint8_t data) {
+	// SPI_Init();
+	SPDR = data;
+  e2:	8e bd       	out	0x2e, r24	; 46
+	asm volatile("nop");
+  e4:	00 00       	nop
+	while (!(SPSR & (1<<SPIF))) ; // wait
+  e6:	0d b4       	in	r0, 0x2d	; 45
+  e8:	07 fe       	sbrs	r0, 7
+  ea:	fd cf       	rjmp	.-6      	; 0xe6 <SPItransfer+0x4>
+	
+	return SPDR;
+  ec:	8e b5       	in	r24, 0x2e	; 46
+}
+  ee:	08 95       	ret
+
+000000f0 <W5100write>:
+
+  uint8_t W5100write(uint16_t _addr, uint8_t _data)
+  {
+  f0:	1f 93       	push	r17
+  f2:	cf 93       	push	r28
+  f4:	df 93       	push	r29
+  f6:	d8 2f       	mov	r29, r24
+  f8:	19 2f       	mov	r17, r25
+  fa:	c6 2f       	mov	r28, r22
+	
+	 
+	  SPI_PORT&=~(1<<SS_PIN);
+  fc:	28 98       	cbi	0x05, 0	; 5
+	  SPItransfer(0xF0);
+  fe:	80 ef       	ldi	r24, 0xF0	; 240
+ 100:	f0 df       	rcall	.-32     	; 0xe2 <SPItransfer>
+	  SPItransfer((uint8_t)(_addr >> 8));
+ 102:	81 2f       	mov	r24, r17
+ 104:	ee df       	rcall	.-36     	; 0xe2 <SPItransfer>
+	  SPItransfer((uint8_t)(_addr & 0xFF));
+ 106:	8d 2f       	mov	r24, r29
+ 108:	ec df       	rcall	.-40     	; 0xe2 <SPItransfer>
+	  uint8_t sym = SPItransfer(_data);
+ 10a:	8c 2f       	mov	r24, r28
+ 10c:	ea df       	rcall	.-44     	; 0xe2 <SPItransfer>
+	/*  if(sym!=3){
+		  Serial.println("RESET FROM W5100 WRITE");
+		  resetEthernet();
+	  }*/
+	  SPI_PORT|=(1<<SS_PIN);
+ 10e:	28 9a       	sbi	0x05, 0	; 5
+
+
+	  return 1;
+  }
+ 110:	81 e0       	ldi	r24, 0x01	; 1
+ 112:	df 91       	pop	r29
+ 114:	cf 91       	pop	r28
+ 116:	1f 91       	pop	r17
+ 118:	08 95       	ret
+
+0000011a <W5100_SetMac>:
+  uint8_t W5100_SetMac(uint16_t oct1, uint16_t oct2, uint16_t oct3, uint16_t oct4, uint16_t oct5, uint16_t oct6)
+  {
+ 11a:	ef 92       	push	r14
+ 11c:	0f 93       	push	r16
+ 11e:	1f 93       	push	r17
+ 120:	cf 93       	push	r28
+ 122:	df 93       	push	r29
+ 124:	16 2f       	mov	r17, r22
+ 126:	d4 2f       	mov	r29, r20
+ 128:	c2 2f       	mov	r28, r18
+	  W5100write(0x09, oct1);
+ 12a:	68 2f       	mov	r22, r24
+ 12c:	89 e0       	ldi	r24, 0x09	; 9
+ 12e:	90 e0       	ldi	r25, 0x00	; 0
+ 130:	df df       	rcall	.-66     	; 0xf0 <W5100write>
+	  W5100write(0x0A, oct2);
+ 132:	61 2f       	mov	r22, r17
+ 134:	8a e0       	ldi	r24, 0x0A	; 10
+ 136:	90 e0       	ldi	r25, 0x00	; 0
+ 138:	db df       	rcall	.-74     	; 0xf0 <W5100write>
+	  W5100write(0x0B, oct3);
+ 13a:	6d 2f       	mov	r22, r29
+ 13c:	8b e0       	ldi	r24, 0x0B	; 11
+ 13e:	90 e0       	ldi	r25, 0x00	; 0
+ 140:	d7 df       	rcall	.-82     	; 0xf0 <W5100write>
+	  W5100write(0x0C, oct4);
+ 142:	6c 2f       	mov	r22, r28
+ 144:	8c e0       	ldi	r24, 0x0C	; 12
+ 146:	90 e0       	ldi	r25, 0x00	; 0
+ 148:	d3 df       	rcall	.-90     	; 0xf0 <W5100write>
+	  W5100write(0x0D, oct5);
+ 14a:	60 2f       	mov	r22, r16
+ 14c:	8d e0       	ldi	r24, 0x0D	; 13
+ 14e:	90 e0       	ldi	r25, 0x00	; 0
+ 150:	cf df       	rcall	.-98     	; 0xf0 <W5100write>
+	  W5100write(0x0E, oct6);
+ 152:	6e 2d       	mov	r22, r14
+ 154:	8e e0       	ldi	r24, 0x0E	; 14
+ 156:	90 e0       	ldi	r25, 0x00	; 0
+ 158:	cb df       	rcall	.-106    	; 0xf0 <W5100write>
+
+	  return 1;
+  }
+ 15a:	81 e0       	ldi	r24, 0x01	; 1
+ 15c:	df 91       	pop	r29
+ 15e:	cf 91       	pop	r28
+ 160:	1f 91       	pop	r17
+ 162:	0f 91       	pop	r16
+ 164:	ef 90       	pop	r14
+ 166:	08 95       	ret
+
+00000168 <W5100_SetIP>:
+
+  uint8_t W5100_SetIP(uint16_t oct1, uint16_t oct2, uint16_t oct3, uint16_t oct4)
+  {
+ 168:	1f 93       	push	r17
+ 16a:	cf 93       	push	r28
+ 16c:	df 93       	push	r29
+ 16e:	16 2f       	mov	r17, r22
+ 170:	d4 2f       	mov	r29, r20
+ 172:	c2 2f       	mov	r28, r18
+	  W5100write(0x0F, oct1);
+ 174:	68 2f       	mov	r22, r24
+ 176:	8f e0       	ldi	r24, 0x0F	; 15
+ 178:	90 e0       	ldi	r25, 0x00	; 0
+ 17a:	ba df       	rcall	.-140    	; 0xf0 <W5100write>
+	  W5100write(0x10, oct2);
+ 17c:	61 2f       	mov	r22, r17
+ 17e:	80 e1       	ldi	r24, 0x10	; 16
+ 180:	90 e0       	ldi	r25, 0x00	; 0
+ 182:	b6 df       	rcall	.-148    	; 0xf0 <W5100write>
+	  W5100write(0x11, oct3);
+ 184:	6d 2f       	mov	r22, r29
+ 186:	81 e1       	ldi	r24, 0x11	; 17
+ 188:	90 e0       	ldi	r25, 0x00	; 0
+ 18a:	b2 df       	rcall	.-156    	; 0xf0 <W5100write>
+	  W5100write(0x12, oct4);
+ 18c:	6c 2f       	mov	r22, r28
+ 18e:	82 e1       	ldi	r24, 0x12	; 18
+ 190:	90 e0       	ldi	r25, 0x00	; 0
+ 192:	ae df       	rcall	.-164    	; 0xf0 <W5100write>
+	  return 1;
+  }
+ 194:	81 e0       	ldi	r24, 0x01	; 1
+ 196:	df 91       	pop	r29
+ 198:	cf 91       	pop	r28
+ 19a:	1f 91       	pop	r17
+ 19c:	08 95       	ret
+
+0000019e <init>:
+
+void init(){
+ 19e:	ef 92       	push	r14
+ 1a0:	ff 92       	push	r15
+ 1a2:	0f 93       	push	r16
+ 1a4:	1f 93       	push	r17
+	//Инициализация портов светодиодов
+	DDRB|=1<<PB7;
+ 1a6:	27 9a       	sbi	0x04, 7	; 4
+	DDRG|=1<<PG3;
+ 1a8:	9b 9a       	sbi	0x13, 3	; 19
+	//Инициализация SPI
+	SPCR |=(1<<SPE)|(1<<MSTR);
+ 1aa:	8c b5       	in	r24, 0x2c	; 44
+ 1ac:	80 65       	ori	r24, 0x50	; 80
+ 1ae:	8c bd       	out	0x2c, r24	; 44
+    SPSR = (0<<SPI2X);
+ 1b0:	1d bc       	out	0x2d, r1	; 45
+	SPI_DDR|=1<<SCK_PIN;
+ 1b2:	21 9a       	sbi	0x04, 1	; 4
+	SPI_DDR|=1<<MOSI_PIN;
+ 1b4:	22 9a       	sbi	0x04, 2	; 4
+	SPI_DDR&=~(1<<MISO_PIN);
+ 1b6:	23 98       	cbi	0x04, 3	; 4
+	SPI_DDR|=1<<SS_PIN;
+ 1b8:	20 9a       	sbi	0x04, 0	; 4
+	SPI_PORT|=1<<SS_PIN;
+ 1ba:	28 9a       	sbi	0x05, 0	; 5
+
+		DDRB|=1<<PB5;
+ 1bc:	25 9a       	sbi	0x04, 5	; 4
+		//	_delay_ms(600);
+
+	PORTB&=~(1<<PB5);
+ 1be:	2d 98       	cbi	0x05, 5	; 5
+
+	DDRE|=1<<PE4;
+ 1c0:	6c 9a       	sbi	0x0d, 4	; 13
+	PORTE&=~(1<<PE4);
+ 1c2:	74 98       	cbi	0x0e, 4	; 14
+	#else
+		//round up by default
+		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
+	#endif
+
+	__builtin_avr_delay_cycles(__ticks_dc);
+ 1c4:	8f e7       	ldi	r24, 0x7F	; 127
+ 1c6:	9e e3       	ldi	r25, 0x3E	; 62
+ 1c8:	01 97       	sbiw	r24, 0x01	; 1
+ 1ca:	f1 f7       	brne	.-4      	; 0x1c8 <init+0x2a>
+ 1cc:	00 c0       	rjmp	.+0      	; 0x1ce <init+0x30>
+ 1ce:	00 00       	nop
+	_delay_ms(2);
+	DDRE&=~(1<<PE4);
+ 1d0:	6c 98       	cbi	0x0d, 4	; 13
+ 1d2:	9f ef       	ldi	r25, 0xFF	; 255
+ 1d4:	27 e9       	ldi	r18, 0x97	; 151
+ 1d6:	8a e3       	ldi	r24, 0x3A	; 58
+ 1d8:	91 50       	subi	r25, 0x01	; 1
+ 1da:	20 40       	sbci	r18, 0x00	; 0
+ 1dc:	80 40       	sbci	r24, 0x00	; 0
+ 1de:	e1 f7       	brne	.-8      	; 0x1d8 <init+0x3a>
+ 1e0:	00 c0       	rjmp	.+0      	; 0x1e2 <init+0x44>
+ 1e2:	00 00       	nop
+			_delay_ms(600);
+	 W5100write(0, 0x80);
+ 1e4:	60 e8       	ldi	r22, 0x80	; 128
+ 1e6:	80 e0       	ldi	r24, 0x00	; 0
+ 1e8:	90 e0       	ldi	r25, 0x00	; 0
+ 1ea:	82 df       	rcall	.-252    	; 0xf0 <W5100write>
+	 W5100write(0x1B, 0x55);
+ 1ec:	65 e5       	ldi	r22, 0x55	; 85
+ 1ee:	8b e1       	ldi	r24, 0x1B	; 27
+ 1f0:	90 e0       	ldi	r25, 0x00	; 0
+ 1f2:	7e df       	rcall	.-260    	; 0xf0 <W5100write>
+	 W5100write(0x1A, 0x55);
+ 1f4:	65 e5       	ldi	r22, 0x55	; 85
+ 1f6:	8a e1       	ldi	r24, 0x1A	; 26
+ 1f8:	90 e0       	ldi	r25, 0x00	; 0
+ 1fa:	7a df       	rcall	.-268    	; 0xf0 <W5100write>
+	 W5100_SetMac(0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02);
+ 1fc:	68 94       	set
+ 1fe:	ee 24       	eor	r14, r14
+ 200:	e1 f8       	bld	r14, 1
+ 202:	f1 2c       	mov	r15, r1
+ 204:	0e ed       	ldi	r16, 0xDE	; 222
+ 206:	10 e0       	ldi	r17, 0x00	; 0
+ 208:	2c ec       	ldi	r18, 0xCC	; 204
+ 20a:	30 e0       	ldi	r19, 0x00	; 0
+ 20c:	4b eb       	ldi	r20, 0xBB	; 187
+ 20e:	50 e0       	ldi	r21, 0x00	; 0
+ 210:	6a ea       	ldi	r22, 0xAA	; 170
+ 212:	70 e0       	ldi	r23, 0x00	; 0
+ 214:	80 e0       	ldi	r24, 0x00	; 0
+ 216:	90 e0       	ldi	r25, 0x00	; 0
+ 218:	80 df       	rcall	.-256    	; 0x11a <W5100_SetMac>
+	 W5100_SetIP(10,0,0,76);
+ 21a:	2c e4       	ldi	r18, 0x4C	; 76
+ 21c:	30 e0       	ldi	r19, 0x00	; 0
+ 21e:	40 e0       	ldi	r20, 0x00	; 0
+ 220:	50 e0       	ldi	r21, 0x00	; 0
+ 222:	60 e0       	ldi	r22, 0x00	; 0
+ 224:	70 e0       	ldi	r23, 0x00	; 0
+ 226:	8a e0       	ldi	r24, 0x0A	; 10
+ 228:	90 e0       	ldi	r25, 0x00	; 0
+ 22a:	9e df       	rcall	.-196    	; 0x168 <W5100_SetIP>
+	 
+}
+ 22c:	1f 91       	pop	r17
+ 22e:	0f 91       	pop	r16
+ 230:	ff 90       	pop	r15
+ 232:	ef 90       	pop	r14
+ 234:	08 95       	ret
+
+00000236 <main>:
+
+
+
+int main(void)
+{
+    init();
+ 236:	b3 df       	rcall	.-154    	; 0x19e <init>
+    while (1) 
+    {
+		PORTB|=1<<PB7;
+ 238:	2f 9a       	sbi	0x05, 7	; 5
+		PORTG&=~(1<<PG3);
+ 23a:	a3 98       	cbi	0x14, 3	; 20
+ 23c:	2f ef       	ldi	r18, 0xFF	; 255
+ 23e:	83 ed       	ldi	r24, 0xD3	; 211
+ 240:	90 e3       	ldi	r25, 0x30	; 48
+ 242:	21 50       	subi	r18, 0x01	; 1
+ 244:	80 40       	sbci	r24, 0x00	; 0
+ 246:	90 40       	sbci	r25, 0x00	; 0
+ 248:	e1 f7       	brne	.-8      	; 0x242 <main+0xc>
+ 24a:	00 c0       	rjmp	.+0      	; 0x24c <main+0x16>
+ 24c:	00 00       	nop
+		_delay_ms(500);
+		PORTB&=~(1<<PB7);
+ 24e:	2f 98       	cbi	0x05, 7	; 5
+		PORTG|=1<<PG3;
+ 250:	a3 9a       	sbi	0x14, 3	; 20
+ 252:	2f ef       	ldi	r18, 0xFF	; 255
+ 254:	83 ed       	ldi	r24, 0xD3	; 211
+ 256:	90 e3       	ldi	r25, 0x30	; 48
+ 258:	21 50       	subi	r18, 0x01	; 1
+ 25a:	80 40       	sbci	r24, 0x00	; 0
+ 25c:	90 40       	sbci	r25, 0x00	; 0
+ 25e:	e1 f7       	brne	.-8      	; 0x258 <main+0x22>
+ 260:	00 c0       	rjmp	.+0      	; 0x262 <main+0x2c>
+ 262:	00 00       	nop
+ 264:	e9 cf       	rjmp	.-46     	; 0x238 <main+0x2>
+
+00000266 <_exit>:
+ 266:	f8 94       	cli
+
+00000268 <__stop_program>:
+ 268:	ff cf       	rjmp	.-2      	; 0x268 <__stop_program>
