@@ -42,14 +42,14 @@
 #define STATE_DHCP_REREQUEST  4
 #define STATE_DHCP_RELEASE  5
 
-#define htons(x) ( ((x)<< 8 & 0xFF00) | \
-                   ((x)>> 8 & 0x00FF) )
+#define htons(x) ( ((x)<< 8 & 0xFF00) | ((x)>> 8 & 0x00FF) )
+
 #define ntohs(x) htons(x)
 
-#define htonl(x) ( ((x)<<24 & 0xFF000000UL) | \
-                   ((x)<< 8 & 0x00FF0000UL) | \
-                   ((x)>> 8 & 0x0000FF00UL) | \
-                   ((x)>>24 & 0x000000FFUL) )
+#define htonl(x) ( ((x)<<24 & 0xFF000000UL) |((x)<< 8 & 0x00FF0000UL) |((x)>> 8 & 0x0000FF00UL) |((x)>>24 & 0x000000FFUL) )
+
+
+
 #define ntohl(x) htonl(x) 
               uint32_t TimeLeasedStart=0;
 #define HOST_NAME "WIZnet"
@@ -348,12 +348,10 @@ uint8_t parseDHCPResponse(unsigned long responseTimeout, uint32_t* transactionId
     {
             return 255; 
     }
-	else{
-	LED_On();
-	}
+
     // start reading in the packet
     RIP_MSG_FIXED fixedMsg;
-    _dhcpUdpSocket_read((uint8_t*)&fixedMsg, sizeof(RIP_MSG_FIXED));
+    _dhcpUdpSocket_readBlock((uint8_t*)&fixedMsg, sizeof(RIP_MSG_FIXED));
 	SerialPrintln("MESSAGE OP:");
   SerialPrintUint8_t(fixedMsg.op);
   SerialPrintEndl();
@@ -584,6 +582,8 @@ uint8_t DHCP_automat(uint8_t event)
 
           if(messageType==DHCP_ACK){
               W5100_SetIP(_dhcpLocalIp[0],_dhcpLocalIp[1],_dhcpLocalIp[2],_dhcpLocalIp[3]);
+			                W5100_SetGateway(_dhcpGatewayIp[0],_dhcpGatewayIp[1],_dhcpGatewayIp[2],_dhcpGatewayIp[3]);
+			                W5100_SetMask(_dhcpSubnetMask[0], _dhcpSubnetMask[1], _dhcpSubnetMask[2], _dhcpSubnetMask[3]);
               //TimeLeasedStart=millis();
 			  StartTimer32(TD_DHCP_lease_timer, 30000);
               state=255;
@@ -618,7 +618,7 @@ uint8_t DHCP_automat(uint8_t event)
             case 1:
 				 _dhcpTransactionId = random2(1UL, 2000UL);
 				  _dhcpInitialTransactionId = _dhcpTransactionId;
-				  memset(_dhcpLocalIp, 0, 4);
+				 memset(_dhcpLocalIp, 0, 4);
 				 memset(_dhcpSubnetMask, 0, 4);
 				 memset(_dhcpGatewayIp, 0, 4);
 				 memset(_dhcpDhcpServerIp, 0, 4);

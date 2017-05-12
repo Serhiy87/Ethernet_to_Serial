@@ -542,8 +542,11 @@ void read_data(uint8_t s, volatile uint16_t src, volatile uint8_t *dst, uint16_t
 		dst += size;
 		W5100readBlock(RBASE[s], (uint8_t *) dst, len - size);
 	}
-	else
-	W5100readBlock(src_ptr, (uint8_t *) dst, len);
+	else{
+
+		W5100readBlock(src_ptr, (uint8_t *) dst, len);                
+
+	}
 }
 
 void W5100_recv_data_processing(uint8_t s, uint8_t *data, uint16_t len)
@@ -614,10 +617,14 @@ uint16_t W5100_getRXReceivedSize(uint8_t s)
 int UDP_read(uint8_t _sock)
 {
   uint8_t byte;
-
+  //	SerialPrintln("BYTES RECEIVED:");
   if ((_remaining[_sock] > 0) && (recv(_sock, &byte, 1) > 0))
   {
     // We read things without any problems
+/*	#ifdef UDP_DEBUG
+	SerialPrintUint8_t(byte);
+	SerialPrintEndl(); 
+	#endif*/
     _remaining[_sock]--;
     return byte;
   }
@@ -657,6 +664,24 @@ int UDP_parsePacket(uint8_t _sock)
       // When we get here, any remaining bytes are the data
       ret = _remaining[_sock];
     }
+	#ifdef UDP_DEBUG
+	SerialPrint("REMOTE IP:");
+	SerialPrintUint8_t(_remoteIP[0]);
+	SerialPrint(".");
+	SerialPrintUint8_t(_remoteIP[1]);
+	SerialPrint(".");
+	SerialPrintUint8_t(_remoteIP[2]);
+	SerialPrint(".");
+	SerialPrintUint8_t(_remoteIP[3]);
+	SerialPrint(";");
+	SerialPrintEndl();
+	SerialPrint("REMOTE PORT:");
+	SerialPrintUint16_t(_remotePort[_sock]);
+	SerialPrintEndl();
+	SerialPrint("BYTES OF DATA:");
+	SerialPrintUint16_t(_remaining[_sock]);
+	SerialPrintEndl();
+	#endif
     return ret;
   }
   // There aren't any packets available

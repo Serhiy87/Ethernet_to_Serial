@@ -13,7 +13,7 @@
 #include "TEST_Automat.h"
 #include "DHCP_Automat.h"
 
-uint8_t DHCP_Enable=0;
+uint8_t DHCP_Enable=1;
 uint8_t static_IP[4]={10,0,0,76};
 
 
@@ -80,7 +80,7 @@ uint8_t Ethernet_Automat(uint8_t event){
 		break;
 
 		case 2:
-		//DHCP_automat(1);
+		DHCP_automat(1);
 		//SNMP_Automat(1);
 		TEST_Automat(1);
 		//Webserver_Automat(1);
@@ -95,7 +95,7 @@ uint8_t Ethernet_Automat(uint8_t event){
 			//ResetW5100_automat(0);
 			break;
 			case 2:
-			//DHCP_automat(0);
+			DHCP_automat(0);
 			//SNMP_Automat(0);
 			TEST_Automat(0);
 			//Webserver_Automat(0);
