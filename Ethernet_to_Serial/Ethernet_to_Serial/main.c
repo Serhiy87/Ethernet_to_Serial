@@ -4,13 +4,15 @@
  * Created: 03.05.2017 10:53:53
  * Author : Admin
  */ 
- //#define LOGGING
+#define LOGGING
  #ifdef LOGGING
- //#define Ethernet_Automat_BEGIN_LOGGING
- #define send_DHCP_MESSAGE_Automat_LOGGING
-  #define DHCP_Automat_LOGGING
-  #define  UDP_DEBUG
-  #endif
+	 //#define Ethernet_Automat_BEGIN_LOGGING
+	 //#define send_DHCP_MESSAGE_Automat_LOGGING
+	 //#define DHCP_Automat_LOGGING
+	 //#define UDP_DEBUG
+	  #define SNMP_Automat_LOGGING
+#endif
+ // #define PROGMEM _attribute_((progmem))
  #define F_CPU 16000000UL
 #include <avr/io.h>
 #include <stdint.h>

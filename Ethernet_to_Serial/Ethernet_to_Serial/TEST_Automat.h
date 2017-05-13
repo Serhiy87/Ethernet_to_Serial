@@ -153,7 +153,7 @@ uint8_t TEST_Automat(uint8_t event)
 			ptr[7] = 1800;
 			ptr[8] = 2200;
 			pi4 = (int32_t*)&GPRS_DATA[45];
-			pi4[0] = myMillis();
+			pi4[0] = locUpTime*10;
 			//pi4[1] = DHCP_Leased_count;
 			//pi4[2] = resetDHCP_Counter;
 			//pi4[3] = _dhcpLeaseTime;

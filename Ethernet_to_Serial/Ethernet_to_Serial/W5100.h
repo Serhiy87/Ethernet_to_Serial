@@ -69,6 +69,7 @@ uint16_t SBASE[SOCKETS]; // Tx buffer base address
 uint16_t RBASE[SOCKETS]; // Rx buffer base address
 void SPI_beginTransaction(){};
 void SPI_endTransaction(){};
+void  W5100_init();
 uint8_t SPItransfer(uint8_t data) {
 	// SPI_Init();
 	SPDR = data;

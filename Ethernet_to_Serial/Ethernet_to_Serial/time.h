@@ -489,7 +489,7 @@ ScanCycleInit(void)
 
 // ~~~~~~~~~~~~~~~~~~~~~
 static volatile uint8_t TickCounter;
-
+extern uint32_t locUpTime;
 #if defined (__AVR_ATmega16__) || defined (__AVR_ATmega32__) || defined (__AVR_ATmega128__) || defined (__AVR_ATmega1280__) || defined (__AVR_ATmega2560__) || defined (__AVR_ATmega2561__)
 	ISR(TIMER1_COMPA_vect)
 #elif defined (__AVR_ATxmega128A1__)
@@ -501,21 +501,31 @@ static volatile uint8_t TickCounter;
 	for (i=0; i<Timer8_ISR_TotNumber; i++)
 			if (!(Timer8_ISR_Flg[i/8] &(1<<i%8)) && --Timer8_ISR[i]==0)
 				Timer8_ISR_Flg[i/8] |=(1<<i%8);
-
+			locUpTime+=1;
 	#ifdef HIGH_SPEED_COUNTER
 		HSC_Process();
 	#endif
 }
+
 void 
 TimersInc(void)
-{
+{	
+
 	uint8_t i, TickCounterVar;	
+	static uint8_t TickCounterVar100 = 0;
 	cli();
 	TickCounterVar = TickCounter;
 	TickCounter = 0;
 	sei();
 	for(uint8_t j=0;j<TickCounterVar;j++){
 		LiveTime++;
+			/*TickCounterVar100++;
+			if(TickCounterVar100 == 100){
+			locUpTime++;
+			TickCounterVar100 = 0;
+			}*/
+
+			
 	 	for (i=0; i<Timer8TotNumber; i++){
 			cli();
 			if (!(Timer8Flg[i/8] &(1<<i%8)) && --Timer8[i]==0)

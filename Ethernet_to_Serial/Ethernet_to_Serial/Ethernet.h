@@ -12,10 +12,16 @@
 #include "udp_automat.h"
 #include "TEST_Automat.h"
 #include "DHCP_Automat.h"
+#include "SNMP_Automat.h"
 
 uint8_t DHCP_Enable=1;
 uint8_t static_IP[4]={10,0,0,76};
-
+uint8_t Ethernet_Automat(uint8_t event);
+extern void resetEthernet(void){
+	
+	Ethernet_Automat(0);
+	SerialPrintln("RESET ETHERNET!!!");
+}
 
 uint8_t Ethernet_Automat(uint8_t event){
 	static uint8_t state=0;
@@ -81,7 +87,7 @@ uint8_t Ethernet_Automat(uint8_t event){
 
 		case 2:
 		DHCP_automat(1);
-		//SNMP_Automat(1);
+		SNMP_Automat(1);
 		TEST_Automat(1);
 		//Webserver_Automat(1);
 		break;
@@ -96,7 +102,7 @@ uint8_t Ethernet_Automat(uint8_t event){
 			break;
 			case 2:
 			DHCP_automat(0);
-			//SNMP_Automat(0);
+			SNMP_Automat(0);
 			TEST_Automat(0);
 			//Webserver_Automat(0);
 			break;
