@@ -36,8 +36,8 @@ uint8_t TEST_Automat(uint8_t event)
 	uint16_t numBytes=0;
 	uint8_t messageType = 0;
 	#ifdef TEST_Automat_LOGGING
-	Serial.print("  TEST_automat_Start_state:") ;
-	Serial.println(state) ;
+		Serial.print("  TEST_automat_Start_state:") ;
+		Serial.println(state) ;
 	#endif
 	switch(event){
 		case 0:

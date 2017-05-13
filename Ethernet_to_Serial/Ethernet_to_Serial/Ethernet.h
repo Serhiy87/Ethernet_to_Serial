@@ -13,6 +13,7 @@
 #include "TEST_Automat.h"
 #include "DHCP_Automat.h"
 #include "SNMP_Automat.h"
+#include "Webserver_Automat.h"
 
 uint8_t DHCP_Enable=1;
 uint8_t static_IP[4]={10,0,0,76};
@@ -89,7 +90,7 @@ uint8_t Ethernet_Automat(uint8_t event){
 		DHCP_automat(1);
 		SNMP_Automat(1);
 		TEST_Automat(1);
-		//Webserver_Automat(1);
+		Webserver_Automat(1);
 		break;
 	}
 	if(state!=stateOld){
@@ -104,7 +105,7 @@ uint8_t Ethernet_Automat(uint8_t event){
 			DHCP_automat(0);
 			SNMP_Automat(0);
 			TEST_Automat(0);
-			//Webserver_Automat(0);
+			Webserver_Automat(0);
 			break;
 		}
 	}

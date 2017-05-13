@@ -10,7 +10,8 @@
 	 //#define send_DHCP_MESSAGE_Automat_LOGGING
 	 //#define DHCP_Automat_LOGGING
 	 //#define UDP_DEBUG
-	  #define SNMP_Automat_LOGGING
+	  //#define SNMP_Automat_LOGGING
+	  #define Webserver_Automat_LOGGING
 #endif
  // #define PROGMEM _attribute_((progmem))
  #define F_CPU 16000000UL
