@@ -146,11 +146,11 @@ typedef enum{
 	SNMP_SYNTAX_IP_ADDRESS   = ASN_BER_BASE_APPLICATION | ASN_BER_BASE_PRIMITIVE | 0,
 	SNMP_SYNTAX_COUNTER      = ASN_BER_BASE_APPLICATION | ASN_BER_BASE_PRIMITIVE | 1,
 	SNMP_SYNTAX_GAUGE        = ASN_BER_BASE_APPLICATION | ASN_BER_BASE_PRIMITIVE | 2,
-	SNMP_SYNTAX_TIME_TICKS         = ASN_BER_BASE_APPLICATION | ASN_BER_BASE_PRIMITIVE | 3,
-	SNMP_SYNTAX_OPAQUE         = ASN_BER_BASE_APPLICATION | ASN_BER_BASE_PRIMITIVE | 4,
-	SNMP_SYNTAX_NSAPADDR         = ASN_BER_BASE_APPLICATION | ASN_BER_BASE_PRIMITIVE | 5,
-	SNMP_SYNTAX_COUNTER64          = ASN_BER_BASE_APPLICATION | ASN_BER_BASE_PRIMITIVE | 6,
-	SNMP_SYNTAX_UINT32         = ASN_BER_BASE_APPLICATION | ASN_BER_BASE_PRIMITIVE | 7,
+	SNMP_SYNTAX_TIME_TICKS   = ASN_BER_BASE_APPLICATION | ASN_BER_BASE_PRIMITIVE | 3,
+	SNMP_SYNTAX_OPAQUE       = ASN_BER_BASE_APPLICATION | ASN_BER_BASE_PRIMITIVE | 4,
+	SNMP_SYNTAX_NSAPADDR     = ASN_BER_BASE_APPLICATION | ASN_BER_BASE_PRIMITIVE | 5,
+	SNMP_SYNTAX_COUNTER64    = ASN_BER_BASE_APPLICATION | ASN_BER_BASE_PRIMITIVE | 6,
+	SNMP_SYNTAX_UINT32       = ASN_BER_BASE_APPLICATION | ASN_BER_BASE_PRIMITIVE | 7,
 } SNMP_SYNTAXES ;
 
 typedef struct  {
@@ -507,7 +507,7 @@ typedef struct  {
 	SNMP_VALUE VALUE;
 }SNMP_PDU;
 
-
+uint8_t SNMP_VARS_Processing(char* oid, SNMP_PDU* pdu);
 SNMP_API_STAT_CODES SNMP_begin()
 {
 	// set community names
@@ -589,8 +589,7 @@ SNMP_API_STAT_CODES SNMP_requestPdu(SNMP_PDU *pdu)
 	// set packet packet size (skip UDP header)
 	_packetSize = _SNMPUdpSocket_available();
 
-	SerialPrint("Packet_Size: ");
-	SerialPrintUint16_t(_packetSize);
+
 	//
 	// reset packet array
 	memset(_packet, 0, SNMP_MAX_PACKET_LEN);
@@ -901,7 +900,7 @@ void pduReceived()  // is being called when an SNMP packet has been received
 		/*Serial.print("OID: ");
 		Serial.println(oid);*/
 		//
-		
+		//SNMP_VARS_Processing( oid,  &pdu);
 		if ( strcmp_P(oid, sysDescr ) == 0 )
 		{
 			// handle sysDescr (set/get) requests
@@ -1094,7 +1093,7 @@ void pduReceived()  // is being called when an SNMP packet has been received
 
 		else if ( strcmp_P(oid, ledState ) == 0 ) // Analog Pin 0 Level request
 		{
-			SerialPrintln("LEDFUNC");
+
 
 			if ( pdu.type == SNMP_PDU_SET )
 			{
@@ -1118,7 +1117,7 @@ void pduReceived()  // is being called when an SNMP packet has been received
 
 		else if ( strcmp_P(oid, Tfree2cond ) == 0 ) // Analog Pin 0 Level request
 		{
-			SerialPrintln("Tfree2cond");
+
 
 			if ( pdu.type == SNMP_PDU_SET )
 			{
@@ -1141,7 +1140,7 @@ void pduReceived()  // is being called when an SNMP packet has been received
 		}
 		else if ( strcmp_P(oid, Troom ) == 0 ) // Analog Pin 0 Level request
 		{
-			SerialPrintln("Troom");
+
 
 			if ( pdu.type == SNMP_PDU_SET )
 			{
@@ -1162,7 +1161,7 @@ void pduReceived()  // is being called when an SNMP packet has been received
 		}
 		else if ( strcmp_P(oid, Tair ) == 0 ) // Analog Pin 0 Level request
 		{
-			SerialPrintln("Tair");
+
 
 			if ( pdu.type == SNMP_PDU_SET )
 			{
@@ -1184,7 +1183,7 @@ void pduReceived()  // is being called when an SNMP packet has been received
 		}
 		else if ( strcmp_P(oid, Tcond ) == 0 ) // Analog Pin 0 Level request
 		{
-			SerialPrintln("Tcond");
+
 
 			if ( pdu.type == SNMP_PDU_SET )
 			{
@@ -1202,10 +1201,12 @@ void pduReceived()  // is being called when an SNMP packet has been received
 				pdu.error = status;
 			}
 			//      Serial << "v_AnalogPin0..." << v_AnalogPin0 << " " << pdu.VALUE.size << endl;
+		}else if(SNMP_VARS_Processing( oid,  &pdu) == 1){
+
 		}
 
 
-		
+	
 
 
 
@@ -1226,11 +1227,11 @@ void pduReceived()  // is being called when an SNMP packet has been received
 			//pdu.VALUE.encode(SNMP_SYNTAX_NULL);
 			pdu.type = SNMP_PDU_RESPONSE;
 			pdu.error = SNMP_ERR_NO_SUCH_NAME;
-			SerialPrintln("Unknown OID");
+
 		}
 		
 		//
-		SerialPrintln("Sending response...");
+
 		
 		SNMP_responsePdu(&pdu);
 		count++;
@@ -1299,7 +1300,9 @@ uint8_t SNMP_Automat(uint8_t event)
 
 		case 2:
 		if(readSnSR(1)!=0x22){
+			#ifdef SNMP_Automat_LOGGING
 			SerialPrintln("RESET FROM SNMP!");
+			#endif
 			resetEthernet();
 		}
 		if(_UDPtoSerialSocket_parsePacket())
@@ -1366,6 +1369,70 @@ extern void resetSNMP(void){
 	SNMP_Automat(0);
 	SerialPrintln("RESET SNMP!!!");
 };
+
+typedef struct {
+	const char* oid;
+	SNMP_SYNTAXES syn;
+	void * variable;
+}SNMP_FIELD;
+
+
+
+SNMP_FIELD SNMP_VARS[] = {
+	{"1.3.6.1.4.1.2017.12.1.0", SNMP_SYNTAX_INT, &MB_HoldReg[0]},
+	{"1.3.6.1.4.1.2017.12.2.0", SNMP_SYNTAX_INT, &MB_HoldReg[1]},
+	{"1.3.6.1.4.1.2017.12.3.0", SNMP_SYNTAX_INT, &MB_HoldReg[2]},
+	{"1.3.6.1.4.1.2017.12.4.0", SNMP_SYNTAX_INT, &MB_HoldReg[3]},
+
+	{"1.3.6.1.4.1.2017.12.5.0", SNMP_SYNTAX_INT, &MB_InReg[0]},
+	{"1.3.6.1.4.1.2017.12.6.0", SNMP_SYNTAX_INT, &MB_InReg[1]},
+	{"1.3.6.1.4.1.2017.12.7.0", SNMP_SYNTAX_INT, &MB_InReg[2]},
+	{"1.3.6.1.4.1.2017.12.8.0", SNMP_SYNTAX_INT, &MB_InReg[3]},
+	{"1.3.6.1.4.1.2017.12.9.0", SNMP_SYNTAX_INT, &MB_InReg[4]},
+	{"1.3.6.1.4.1.2017.12.10.0", SNMP_SYNTAX_INT, &MB_InReg[5]},
+	{"1.3.6.1.4.1.2017.12.11.0", SNMP_SYNTAX_INT, &MB_InReg[6]},
+	{"1.3.6.1.4.1.2017.12.12.0", SNMP_SYNTAX_INT, &MB_InReg[7]},
+};
+
+uint8_t SNMP_VARS_Processing(char* oid, SNMP_PDU* pdu){
+		for(uint8_t i; i<sizeof(SNMP_VARS)/sizeof(SNMP_FIELD); i++){
+			 if(strcmp(oid, SNMP_VARS[i].oid) == 0){
+				switch(SNMP_VARS[i].syn){
+					case SNMP_SYNTAX_OCTETS:
+					case SNMP_SYNTAX_OPAQUE:
+							if ( pdu->type == SNMP_PDU_SET )
+									{
+											status = decodeOctetStringToString(&pdu->VALUE, *(const char *)SNMP_VARS[i].variable, strlen((const char *)SNMP_VARS[i].variable));
+											pdu->type = SNMP_PDU_RESPONSE;
+											pdu->error = status;
+									}
+									else
+									{
+											status = encodeStringToOctetString(&pdu->VALUE, SNMP_SYNTAX_OCTETS, *(const char *)SNMP_VARS[i].variable);
+											pdu->type = SNMP_PDU_RESPONSE;
+											pdu->error = status;
+									}return 1;break;
+					case SNMP_SYNTAX_INT:
+							if ( pdu->type == SNMP_PDU_SET )
+							{
+								status = decodeInt16toInt16(&pdu->VALUE, (int16_t *)SNMP_VARS[i].variable);
+								pdu->type = SNMP_PDU_RESPONSE;
+								pdu->error = status;
+							}
+							else
+							{
+								status = encodeInt16ToInt(&pdu->VALUE, SNMP_SYNTAX_INT, *(int16_t *)SNMP_VARS[i].variable);
+								pdu->type = SNMP_PDU_RESPONSE;
+								pdu->error = status;
+							}return 1;break;
+
+
+						
+				}
+			 }
+		 }
+		 return 0;
+}
 
 
 #endif /* SNMP_AUTOMAT_H_ */

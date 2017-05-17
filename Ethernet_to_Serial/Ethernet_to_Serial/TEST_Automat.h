@@ -18,7 +18,7 @@ uint8_t FreeCoolListenerIP[]={194,176,97,118};
 uint16_t FreeCoolPort = 2026;
 uint8_t GPRS_DATA[62];
 uint16_t Vega_SN=50004;
-int32_t Tfree2cond_var=204, Tair_var=106, Troom_var=222, Tcond_var=200;
+extern int32_t Tfree2cond_var=204, Tair_var=106, Troom_var=222, Tcond_var=200;
 int16_t *ptr;
 int32_t* pi4;
 extern uint8_t  _dhcpLocalIp[4];
@@ -53,14 +53,14 @@ uint8_t TEST_Automat(uint8_t event)
 				{
 					Timer = Timer16Alloc();
 				}
-		state=1;
+				state=1;
 		break;
 		
 		case 1:
-		if(UDPbegin2_Automat(1, 2025)!=255){
-			break;
-		}
-		StartTimer16(Timer,1000);
+				if(UDPbegin2_Automat(1, 2025)!=255){
+					break;
+				}
+				StartTimer16(Timer,1000);
 		state=2;
 		break;
 
@@ -145,8 +145,8 @@ uint8_t TEST_Automat(uint8_t event)
 			GPRS_DATA[21] = 'T';
 
 			ptr = (int16_t*)&GPRS_DATA[27];
-			ptr[2] = Troom_var;
-			ptr[3] = Tair_var;
+			ptr[2] = MB_HoldReg[0];
+			ptr[3] = MB_Param[0].StopBits/*.Parity*/;
 			ptr[4] = Tcond_var;
 			ptr[5] = Tfree2cond_var;
 			ptr[6] = 123;

@@ -21,7 +21,7 @@ uint8_t Ethernet_Automat(uint8_t event);
 extern void resetEthernet(void){
 	
 	Ethernet_Automat(0);
-	SerialPrintln("RESET ETHERNET!!!");
+	//SerialPrintln("RESET ETHERNET!!!");
 }
 
 uint8_t Ethernet_Automat(uint8_t event){
@@ -52,7 +52,7 @@ uint8_t Ethernet_Automat(uint8_t event){
 		{
 			break;
 		}*/
-		//W5100_Init();
+		W5100_init();
 		W5100_SetMac(0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02);
 		_dhcpMacAddr[0]=0x00;
 		_dhcpMacAddr[1]=0xAA;
@@ -87,10 +87,10 @@ uint8_t Ethernet_Automat(uint8_t event){
 		break;
 
 		case 2:
-		DHCP_automat(1);
-		SNMP_Automat(1);
-		TEST_Automat(1);
-		Webserver_Automat(1);
+			DHCP_automat(1);
+			SNMP_Automat(1);
+			TEST_Automat(1);
+			Webserver_Automat(1);
 		break;
 	}
 	if(state!=stateOld){
@@ -102,10 +102,10 @@ uint8_t Ethernet_Automat(uint8_t event){
 			//ResetW5100_automat(0);
 			break;
 			case 2:
-			DHCP_automat(0);
-			SNMP_Automat(0);
-			TEST_Automat(0);
-			Webserver_Automat(0);
+				DHCP_automat(0);
+				SNMP_Automat(0);
+				TEST_Automat(0);
+				Webserver_Automat(0);
 			break;
 		}
 	}

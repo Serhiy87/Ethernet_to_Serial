@@ -2,7 +2,9 @@
 #define DHCP_Automat_h
 
 #include "UDP_Automat.h"
+#ifdef LOGGING
 #include "Serial.h"
+#endif
 #include <string.h> 
 #include <stdlib.h>
 #define DHCP_PORT 68
@@ -352,9 +354,11 @@ uint8_t parseDHCPResponse(unsigned long responseTimeout, uint32_t* transactionId
     // start reading in the packet
     RIP_MSG_FIXED fixedMsg;
     _dhcpUdpSocket_readBlock((uint8_t*)&fixedMsg, sizeof(RIP_MSG_FIXED));
-	SerialPrintln("MESSAGE OP:");
-  SerialPrintUint8_t(fixedMsg.op);
-  SerialPrintEndl();
+	    #ifdef send_DHCP_MESSAGE_Automat_LOGGING
+			SerialPrintln("MESSAGE OP:");
+		  SerialPrintUint8_t(fixedMsg.op);
+		  SerialPrintEndl();
+		 #endif
     if(fixedMsg.op == DHCP_BOOTREPLY && _dhcpUdpSocket_remotePort() == DHCP_SERVER_PORT)
     {
         *transactionId = ntohl(fixedMsg.xid);
@@ -581,16 +585,33 @@ uint8_t DHCP_automat(uint8_t event)
           messageType=parseDHCPResponse(_responseTimeout, &respId);
 
           if(messageType==DHCP_ACK){
+		  		#ifdef DHCP_Automat_LOGGING
+		  		SerialPrintln("ACK Received");
+		  		#endif
               W5100_SetIP(_dhcpLocalIp[0],_dhcpLocalIp[1],_dhcpLocalIp[2],_dhcpLocalIp[3]);
-			                W5100_SetGateway(_dhcpGatewayIp[0],_dhcpGatewayIp[1],_dhcpGatewayIp[2],_dhcpGatewayIp[3]);
-			                W5100_SetMask(_dhcpSubnetMask[0], _dhcpSubnetMask[1], _dhcpSubnetMask[2], _dhcpSubnetMask[3]);
+			  W5100_SetGateway(_dhcpGatewayIp[0],_dhcpGatewayIp[1],_dhcpGatewayIp[2],_dhcpGatewayIp[3]);
+			  W5100_SetMask(_dhcpSubnetMask[0], _dhcpSubnetMask[1], _dhcpSubnetMask[2], _dhcpSubnetMask[3]);
+			  		  		#ifdef DHCP_Automat_LOGGING
+			  SerialPrint("IP:");
+			  SerialPrintUint8_t(_dhcpLocalIp[0]);
+			  SerialPrint(",");
+			  SerialPrintUint8_t(_dhcpLocalIp[1]);
+			  SerialPrint(",");
+			  SerialPrintUint8_t(_dhcpLocalIp[2]);
+			  SerialPrint(",");
+			  SerialPrintUint8_t(_dhcpLocalIp[3]);
+			  SerialPrintln(";");
+			  #endif
               //TimeLeasedStart=millis();
-			  StartTimer32(TD_DHCP_lease_timer, 30000);
+			  StartTimer32(TD_DHCP_lease_timer, 3000);
               state=255;
               break;         
            }
            else{
             if(messageType == DHCP_NAK){
+						#ifdef DHCP_Automat_LOGGING
+							SerialPrintln("NAK Received");
+						#endif
                             state=3;
                             break;
               }
@@ -605,7 +626,7 @@ uint8_t DHCP_automat(uint8_t event)
 
 	    case 255:
 				if(Timer32Stopp(TD_DHCP_lease_timer)){
-	                  state=1;
+	                  state=6;
 	               }
 			break;
      }
@@ -616,8 +637,8 @@ uint8_t DHCP_automat(uint8_t event)
                 break;
                 
             case 1:
-				 _dhcpTransactionId = random2(1UL, 2000UL);
-				  _dhcpInitialTransactionId = _dhcpTransactionId;
+				_dhcpTransactionId = random2(1UL, 2000UL);
+				_dhcpInitialTransactionId = _dhcpTransactionId;
 				 memset(_dhcpLocalIp, 0, 4);
 				 memset(_dhcpSubnetMask, 0, 4);
 				 memset(_dhcpGatewayIp, 0, 4);

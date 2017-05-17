@@ -56,7 +56,7 @@ char buf1[100];
 #define MR_IPRAW    0x03    // IP LAYER RAW SOCK
 #define MR_MACRAW   0x04    // MAC LAYER RAW SOCK
 #define MR_PPPOE    0x05    // PPPoE
-#define MR_ND     0x20    // No Delayed Ack(TCP) flag
+#define MR_ND		0x20    // No Delayed Ack(TCP) flag
 #define MR_MULTI    0x80    // support multicating
 
 // WebserverSocket_CR values
@@ -332,7 +332,7 @@ uint8_t Webserver_Automat(uint8_t event)
 			switch(sockstat)
 			{
 				case SOCK_CLOSED:
-				state=2;
+				state = 2;
 				break;
 				case SOCK_ESTABLISHED:
 				if(clo==0){
@@ -497,8 +497,7 @@ uint8_t Webserver_Automat(uint8_t event)
 				state=1;
 				break;
 		case 14:
-				
-				
+								
 				break;
 		case 15:
 				WebserverSocket_disconnect();

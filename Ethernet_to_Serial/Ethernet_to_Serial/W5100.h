@@ -22,8 +22,8 @@
 #define MAX_SOCK_NUM 4
 #define TXBUF_BASE 0x4000
 #define RXBUF_BASE 0x6000
-  static const uint16_t CH_BASE = 0x0400;
-  static const uint16_t CH_SIZE = 0x0100;
+static const uint16_t CH_BASE = 0x0400;
+static const uint16_t CH_SIZE = 0x0100;
 
 //Socket states
 #define CLOSED       0x00

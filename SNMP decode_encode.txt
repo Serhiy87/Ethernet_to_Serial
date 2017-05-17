@@ -1,0 +1,60 @@
+decode 
+1  decodeOctetStringToString(SNMP_VALUE *snmp_value, char *value, size_t max_size)
+		1)SNMP_SYNTAX_OCTETS
+		2)SNMP_SYNTAX_OID
+		3)SNMP_SYNTAX_OPAQUE
+
+2  decodeInt16toInt16(SNMP_VALUE *snmp_value, int16_t *value)
+		4)SNMP_SYNTAX_INT
+
+3  decodeInt32ToInt32(SNMP_VALUE *snmp_value, int32_t *value)
+		5)SNMP_SYNTAX_INT32
+
+4 decodeUint32CounterTimeticksGaugeToUint32(SNMP_VALUE *snmp_value, uint32_t *value)
+		6)SNMP_SYNTAX_COUNTER
+		7)SNMP_SYNTAX_TIME_TICKS
+		8)SNMP_SYNTAX_GAUGE
+		9)SNMP_SYNTAX_UINT32
+
+5 decodeIpAddressToByteArray(SNMP_VALUE *snmp_value, byte *value)
+		10)SNMP_SYNTAX_IP_ADDRESS
+		11)SNMP_SYNTAX_NSAPADDR
+		
+6 decodeBoolToUint8(SNMP_VALUE *snmp_value, uint8_t *value)
+		12)SNMP_SYNTAX_BOOL
+		
+encode
+1 encodeStringToOctetString(SNMP_VALUE *snmp_value, SNMP_SYNTAXES syn, const char *value)
+		1)SNMP_SYNTAX_OCTETS
+		2)SNMP_SYNTAX_OPAQUE
+
+2 encodeInt16ToInt(SNMP_VALUE *snmp_value, SNMP_SYNTAXES syn, const int16_t value)
+		3)SNMP_SYNTAX_INT
+		2)SNMP_SYNTAX_OPAQUE
+		
+3 encodeInt32ToInt32(SNMP_VALUE *snmp_value, SNMP_SYNTAXES syn, const int32_t value)
+		4)SNMP_SYNTAX_INT32
+		2)SNMP_SYNTAX_OPAQUE
+		
+4 encodeUint32ToUint32(SNMP_VALUE *snmp_value, SNMP_SYNTAXES syn, const uint32_t value)
+		5)SNMP_SYNTAX_COUNTER
+		6)SNMP_SYNTAX_TIME_TICKS
+		7)SNMP_SYNTAX_GAUGE
+		8)SNMP_SYNTAX_UINT32
+		2)SNMP_SYNTAX_OPAQUE
+		
+6 encodeByteArrayToIpAddress(SNMP_VALUE *snmp_value, SNMP_SYNTAXES syn, const byte *value)
+		9)SNMP_SYNTAX_IP_ADDRESS
+		10)SNMP_SYNTAX_NSAPADDR
+		2)SNMP_SYNTAX_OPAQUE
+		
+7 encodeUint8ToBool(SNMP_VALUE *snmp_value, SNMP_SYNTAXES syn, const uint8_t value)
+		11)SNMP_SYNTAX_BOOL
+		2)SNMP_SYNTAX_OPAQUE
+		
+8 encodeUint64ToCounter64(SNMP_VALUE *snmp_value, SNMP_SYNTAXES syn, const uint64_t value)
+		12)SNMP_SYNTAX_COUNTER64 
+		2)SNMP_SYNTAX_OPAQUE
+		
+9 encodeNullToNull
+		13)SNMP_SYNTAX_NULL

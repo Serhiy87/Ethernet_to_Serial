@@ -4,15 +4,18 @@
  * Created: 03.05.2017 10:53:53
  * Author : Admin
  */ 
-#define LOGGING
+//#define LOGGING
  #ifdef LOGGING
 	 //#define Ethernet_Automat_BEGIN_LOGGING
 	 //#define send_DHCP_MESSAGE_Automat_LOGGING
-	 //#define DHCP_Automat_LOGGING
+	 #define DHCP_Automat_LOGGING
 	 //#define UDP_DEBUG
-	  //#define SNMP_Automat_LOGGING
-	  #define Webserver_Automat_LOGGING
+	 //#define SNMP_Automat_LOGGING
+	 //#define Webserver_Automat_LOGGING
 #endif
+
+
+#define  MODBUS
  // #define PROGMEM _attribute_((progmem))
  #define F_CPU 16000000UL
 #include <avr/io.h>
@@ -31,7 +34,78 @@
 #define Timer16ApplNumber	(Timer16ApplManuNumber + 030)
 #define Timer32ApplNumber	(Timer32ApplManuNumber + 020)
 #include "time.h"
+#ifdef LOGGING
 #include "Serial.h"
+
+#endif
+
+
+
+
+
+
+
+
+#ifdef MODBUS
+//#include "usart.h"
+//#include "modbus.h"
+
+uint8_t		MB_Coil[4];
+uint8_t		MB_Input[4];
+uint16_t	MB_HoldReg[58];
+uint16_t	MB_InReg[80];
+
+#define Modbus_Map_List {				\
+	{									\
+		MB_Coil,		32,			\
+		MB_Input,		32,			\
+		MB_HoldReg,		58,				\
+		MB_InReg,		80				\
+	},									\
+}
+
+#define Modbus_Qt 1
+#define MB_Port_List {Port(0) }
+#define Init_Modbus_Param { {EvenParity, 1, MBBR19200} }
+#define MB_Role_List {Role_Master}
+
+#define Init_Modbus_M_Param {[0]={2, 20, 5, 1}}		// Period; Timeout, Try, TimeOff;
+#define Init_MB_NativeAddr {1}
+
+#include "modbus.h"
+
+
+// ~~~~~~~~~~~~~
+void
+USART_Init(void)
+{
+	MB_Init();
+}
+extern int32_t Tfree2cond_var;
+void MB_AppCycle(){
+//MB_HoldReg[1] =  Tfree2cond_var;
+};
+// ~~~~~~~~~~~~~~
+void
+USART_Cycle(void)
+{
+	MB_Cycle();
+	MB_AppCycle();
+}
+
+Modbus_ISR(0)
+
+Modbus_ISR(1)
+
+
+
+// MB_Query MYQUERRY[] = { {4, 0, 25, 0}, {16, 1, 4, 0} , {3, 1, 4, 0} };
+  MB_Query MYQUERRY[] = { {4, 0, 25, 0}, {16, 1, 4, 0}  };
+ MB_Slave MB_Slave_List[] = { {1, MYQUERRY, 2} };
+ MB_Master MB_Master_List[] = { {MB_Slave_List, 1} };
+
+
+#endif
 #include "udp_automat.h"
 
 uint8_t LED_Timer;
@@ -85,7 +159,10 @@ TimeInit();
 myMillisTimer = Timer32Alloc();
 StartTimer32(myMillisTimer,1000000);
 TimersInc();
+#ifdef LOGGING
 SerialInit();
+#endif
+USART_Init();
 }
 void sysCycle(){
 TimersInc();
@@ -98,7 +175,7 @@ int main(void)
 	sysInit();
 	TimeCycle();
     W5100_init();
-		TimeCycle();
+	TimeCycle();
 	Ethernet_Automat(0);
     while (1) 
     {
@@ -106,7 +183,10 @@ int main(void)
 		sysCycle();
 		LED_Cycle();
 		Ethernet_Automat(1);
+		#ifdef LOGGING
 		SerialCycle();
+		#endif
+		USART_Cycle();
 	// W5100write(0x1A, 0x55);
 
     }
