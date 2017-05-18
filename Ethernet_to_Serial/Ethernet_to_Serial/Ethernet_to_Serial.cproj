@@ -169,6 +169,9 @@
     <Compile Include="modbus_s.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Modbus_TCP_Automat.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="pgmspace1.h">
       <SubType>compile</SubType>
     </Compile>

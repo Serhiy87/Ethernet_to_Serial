@@ -145,8 +145,8 @@ uint8_t TEST_Automat(uint8_t event)
 			GPRS_DATA[21] = 'T';
 
 			ptr = (int16_t*)&GPRS_DATA[27];
-			ptr[2] = MB_HoldReg[0];
-			ptr[3] = MB_Param[0].StopBits/*.Parity*/;
+			ptr[2] =0;
+			ptr[3] =0;
 			ptr[4] = Tcond_var;
 			ptr[5] = Tfree2cond_var;
 			ptr[6] = 123;

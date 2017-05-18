@@ -5,17 +5,19 @@
  * Author : Admin
  */ 
 //#define LOGGING
+#define  MODBUS
  #ifdef LOGGING
 	 //#define Ethernet_Automat_BEGIN_LOGGING
 	 //#define send_DHCP_MESSAGE_Automat_LOGGING
-	 #define DHCP_Automat_LOGGING
+	 //#define DHCP_Automat_LOGGING
 	 //#define UDP_DEBUG
 	 //#define SNMP_Automat_LOGGING
 	 //#define Webserver_Automat_LOGGING
+	 #define Modbus_TCP_Automat_LOGGING
 #endif
 
 
-#define  MODBUS
+
  // #define PROGMEM _attribute_((progmem))
  #define F_CPU 16000000UL
 #include <avr/io.h>
@@ -162,7 +164,9 @@ TimersInc();
 #ifdef LOGGING
 SerialInit();
 #endif
+#ifdef MODBUS
 USART_Init();
+#endif
 }
 void sysCycle(){
 TimersInc();
@@ -186,7 +190,9 @@ int main(void)
 		#ifdef LOGGING
 		SerialCycle();
 		#endif
+		#ifdef MODBUS
 		USART_Cycle();
+		#endif
 	// W5100write(0x1A, 0x55);
 
     }
