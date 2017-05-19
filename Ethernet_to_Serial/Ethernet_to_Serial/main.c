@@ -25,10 +25,6 @@
 #include <util/delay.h>
 #include "W5100.h"
 
-
-
-
-
 #define Timer8ApplManuNumber	040
 #define Timer16ApplManuNumber	060
 #define Timer32ApplManuNumber	020
@@ -37,16 +33,8 @@
 #define Timer32ApplNumber	(Timer32ApplManuNumber + 020)
 #include "time.h"
 #ifdef LOGGING
-#include "Serial.h"
-
+	#include "Serial.h"
 #endif
-
-
-
-
-
-
-
 
 #ifdef MODBUS
 //#include "usart.h"
@@ -102,7 +90,7 @@ Modbus_ISR(1)
 
 
 // MB_Query MYQUERRY[] = { {4, 0, 25, 0}, {16, 1, 4, 0} , {3, 1, 4, 0} };
-  MB_Query MYQUERRY[] = { {4, 0, 25, 0}, {16, 1, 4, 0}  };
+ MB_Query MYQUERRY[] = { {4, 0, 25, 0}, {16, 1, 4, 0}  };
  MB_Slave MB_Slave_List[] = { {1, MYQUERRY, 2} };
  MB_Master MB_Master_List[] = { {MB_Slave_List, 1} };
 
@@ -157,16 +145,16 @@ void sysInit(){
 	SPI_DDR&=~(1<<MISO_PIN);
 	SPI_DDR|=1<<SS_PIN;
 	SPI_PORT|=1<<SS_PIN;
-TimeInit();
-myMillisTimer = Timer32Alloc();
-StartTimer32(myMillisTimer,1000000);
-TimersInc();
-#ifdef LOGGING
-SerialInit();
-#endif
-#ifdef MODBUS
-USART_Init();
-#endif
+	TimeInit();
+	myMillisTimer = Timer32Alloc();
+	StartTimer32(myMillisTimer,1000000);
+	TimersInc();
+	#ifdef LOGGING
+		SerialInit();
+	#endif
+	#ifdef MODBUS
+		USART_Init();
+	#endif
 }
 void sysCycle(){
 TimersInc();
@@ -183,7 +171,7 @@ int main(void)
 	Ethernet_Automat(0);
     while (1) 
     {
-	_delay_ms(100);
+	_delay_ms(10);
 		sysCycle();
 		LED_Cycle();
 		Ethernet_Automat(1);

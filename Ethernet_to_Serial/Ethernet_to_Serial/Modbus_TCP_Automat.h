@@ -79,7 +79,7 @@ int cC=0,ii=0,nn=0,nc=0;
 
 
 uint16_t Webserver_recv_size(void)
-{
+{//while(((W5100read(WebserverSocket_RX_RSR) & 0x00FF) << 8 ) + W5100read(WebserverSocket_RX_RSR + 1)!=((W5100read(WebserverSocket_RX_RSR) & 0x00FF) << 8 ) + W5100read(WebserverSocket_RX_RSR + 1)){};
 	return ((W5100read(WebserverSocket_RX_RSR) & 0x00FF) << 8 ) + W5100read(WebserverSocket_RX_RSR + 1);
 }
 void WebserverSocket_close()
@@ -218,22 +218,30 @@ int strindex(char *s,char *t)
 	}
 	return -1;
 }
+#define MB_N_R 125
+#define  MB_N_C 128
 
+  uint16_t R[MB_N_R];
+  uint16_t IR[MB_N_R];
+  uint8_t C[MB_N_C];
 enum MB_FC {
 	MB_FC_NONE           = 0,
 	MB_FC_READ_COILS     = 1,
 	MB_FC_READ_REGISTERS = 3,
+	MB_FC_READ_INPUT_REGISTERS = 4,
 	MB_FC_WRITE_COIL     = 5,
 	MB_FC_WRITE_REGISTER = 6,
 	//Function codes 15 & 16 by Martin Pettersson http://siamect.com
 	MB_FC_WRITE_MULTIPLE_COILS = 15,
 	MB_FC_WRITE_MULTIPLE_REGISTERS = 16
 };
-int word(uint8_t high,uint8_t low){
-	int res = high<<8+low;
+uint16_t word(uint8_t high,uint8_t low){
+	uint16_t res = ((uint16_t)high<<8) + low;
 	return res;
 }
 
+#define lowByte(w) ((uint8_t) ((w) & 0xff))
+#define highByte(w) ((uint8_t) ((w) >> 8))
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
 #define bitSet(value, bit) ((value) |= (1UL << (bit)))
 #define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
@@ -278,10 +286,10 @@ ModbusTCPRun(uint8_t FC)
     }
   }
 */
-  int Start, WordDataLength, ByteDataLength, CoilDataLength, MessageLength;
+  uint16_t Start, WordDataLength, ByteDataLength, CoilDataLength, MessageLength;
 
   //****************** Read Coils **********************
-  if(FC == MB_FC_READ_COILS)
+/*  if(FC == MB_FC_READ_COILS)
   {
     Start = word(buf[8],buf[9]);
     CoilDataLength = word(buf[10],buf[11]);
@@ -308,35 +316,72 @@ ModbusTCPRun(uint8_t FC)
  //   client.write(ByteArray, MessageLength);
 //    Writes = 1 + Writes * (Writes < 999);
     FC = MB_FC_NONE;
-  }
+  }*/
 
   //****************** Read Registers ******************
   if(FC == MB_FC_READ_REGISTERS)
   {
     Start = word(buf[8],buf[9]);
     WordDataLength = word(buf[10],buf[11]);
+	//WordDataLength = 11;
     ByteDataLength = WordDataLength * 2;
-    #ifdef MbDebug
+    #ifdef Modbus_TCP_Automat_LOGGING
       SerialPrint(" MB_FC_READ_REGISTERS S=");
-      SerialPrint(Start);
-      Serial.print(" L=");
-      Serial.println(WordDataLength);
+      SerialPrintUint16_t(Start);
+      SerialPrint(" L=");
+      SerialPrintUint16_t(WordDataLength);
+	  SerialPrintEndl();
     #endif
-    ByteArray[5] = ByteDataLength + 3; //Number of bytes after this one.
-    ByteArray[8] = ByteDataLength;     //Number of bytes after this one (or number of bytes of data).
+	#ifdef MODBUS 
+	R[Start] = MB_HoldReg[Start];
+	#endif
+    buf[5] = ByteDataLength + 3; //Number of bytes after this one.
+    buf[8] = ByteDataLength;     //Number of bytes after this one (or number of bytes of data).
     for(int i = 0; i < WordDataLength; i++)
     {
-      ByteArray[ 9 + i * 2] = highByte(R[Start + i]);
-      ByteArray[10 + i * 2] =  lowByte(R[Start + i]);
+      buf[ 9 + i * 2] = highByte(R[Start + i]);
+      buf[10 + i * 2] =  lowByte(R[Start + i]);
     }
     MessageLength = ByteDataLength + 9;
-    client.write(ByteArray, MessageLength);
-    Writes = 1 + Writes * (Writes < 999);
+    Webserver_send(buf, MessageLength);
+    //Writes = 1 + Writes * (Writes < 999);
     FC = MB_FC_NONE;
   }
 
+    if(FC == MB_FC_READ_INPUT_REGISTERS)
+    {
+	    Start = word(buf[8],buf[9]);
+	    WordDataLength = word(buf[10],buf[11]);
+	    //WordDataLength = 11;
+	    ByteDataLength = WordDataLength * 2;
+	    #ifdef Modbus_TCP_Automat_LOGGING
+	    SerialPrint(" MB_FC_READ_REGISTERS S=");
+	    SerialPrintUint16_t(Start);
+	    SerialPrint(" L=");
+	    SerialPrintUint16_t(WordDataLength);
+	    SerialPrintEndl();
+	    #endif
+	    #ifdef MODBUS
+		    IR[Start] = MB_InReg[Start];
+	    #endif
+	    buf[5] = ByteDataLength + 3; //Number of bytes after this one.
+	    buf[8] = ByteDataLength;     //Number of bytes after this one (or number of bytes of data).
+	    for(int i = 0; i < WordDataLength; i++)
+	    {
+		    buf[ 9 + i * 2] = highByte(IR[Start + i]);
+		    buf[10 + i * 2] =  lowByte(IR[Start + i]);
+			#ifdef MODBUS
+		    buf[ 9 + i * 2] = highByte(MB_InReg[Start + i]);
+		    buf[10 + i * 2] =  lowByte(MB_InReg[Start + i]);				
+			#endif
+	    }
+	    MessageLength = ByteDataLength + 9;
+	    Webserver_send(buf, MessageLength);
+	    //Writes = 1 + Writes * (Writes < 999);
+	    FC = MB_FC_NONE;
+    }
   //****************** Write Coil **********************
-  if(FC == MB_FC_WRITE_COIL)
+/*  if(FC == MB_FC_WRITE_COIL)
   {
     Start = word(ByteArray[8],ByteArray[9]);
     C[Start] = word(ByteArray[10],ByteArray[11]) > 0;
@@ -351,23 +396,26 @@ ModbusTCPRun(uint8_t FC)
     client.write(ByteArray, MessageLength);
     Writes = 1 + Writes * (Writes < 999);
     FC = MB_FC_NONE;
-  } 
+  } */
 
   //****************** Write Register ******************
   if(FC == MB_FC_WRITE_REGISTER)
   {
-    Start = word(ByteArray[8],ByteArray[9]);
-    R[Start] = word(ByteArray[10],ByteArray[11]);
+    Start = word(buf[8],buf[9]);
+    R[Start] = word(buf[10],buf[11]);
+	#ifdef MODBUS
+	 MB_HoldReg[Start] = R[Start];
+	 #endif
     #ifdef MbDebug
-      Serial.print(" MB_FC_WRITE_REGISTER R");
-      Serial.print(Start);
-      Serial.print("=");
-      Serial.println(R[Start]);
+      SerialPrint(" MB_FC_WRITE_REGISTER R");
+      SerialPrint(Start);
+      SerialPrint("=");
+      SerialPrintln(R[Start]);
     #endif
-    ByteArray[5] = 6; //Number of bytes after this one.
+    buf[5] = 6; //Number of bytes after this one.
     MessageLength = 12;
-    client.write(ByteArray, MessageLength);
-    Writes = 1 + Writes * (Writes < 999);
+    Webserver_send(buf, MessageLength);
+   // Writes = 1 + Writes * (Writes < 999);
     FC = MB_FC_NONE;
   }
 
@@ -376,56 +424,62 @@ ModbusTCPRun(uint8_t FC)
   //Function codes 15 & 16 by Martin Pettersson http://siamect.com
   if(FC == MB_FC_WRITE_MULTIPLE_COILS)
   {
-    Start = word(ByteArray[8],ByteArray[9]);
-    CoilDataLength = word(ByteArray[10],ByteArray[11]);
+    Start = word(buf[8],buf[9]);
+    CoilDataLength = word(buf[10],buf[11]);
     ByteDataLength = CoilDataLength / 8;
     if(ByteDataLength * 8 < CoilDataLength) ByteDataLength++;
     CoilDataLength = ByteDataLength * 8;
     #ifdef MbDebug
-      Serial.print(" MB_FC_WRITE_MULTIPLE_COILS S=");
-      Serial.print(Start);
-      Serial.print(" L=");
-      Serial.println(CoilDataLength);
+      SerialPrint(" MB_FC_WRITE_MULTIPLE_COILS S=");
+      SerialPrintUint16_t(Start);
+      SerialPrint(" L=");
+      SerialPrintUint16_t(CoilDataLength);
     #endif
-    ByteArray[5] = ByteDataLength + 5; //Number of bytes after this one.
+    buf[5] = ByteDataLength + 5; //Number of bytes after this one.
     for(int i = 0; i < ByteDataLength ; i++)
     {
       for(int j = 0; j < 8; j++)
       {
-        C[Start + i * 8 + j] = bitRead( ByteArray[13 + i], j);
+        C[Start + i * 8 + j] = bitRead( buf[13 + i], j);
       }
     }
     MessageLength = 12;
-    client.write(ByteArray, MessageLength);
-    Writes = 1 + Writes * (Writes < 999);
+    Webserver_send(buf, MessageLength);
+   // Writes = 1 + Writes * (Writes < 999);
     FC = MB_FC_NONE;
   }
-
+ 
 
   //****************** Write Multiple Registers ******************
   //Function codes 15 & 16 by Martin Pettersson http://siamect.com
   if(FC == MB_FC_WRITE_MULTIPLE_REGISTERS)
   {
-    Start = word(ByteArray[8],ByteArray[9]);
-    WordDataLength = word(ByteArray[10],ByteArray[11]);
+    Start = word(buf[8],buf[9]);
+    WordDataLength = word(buf[10],buf[11]);
     ByteDataLength = WordDataLength * 2;
     #ifdef MbDebug
-      Serial.print(" MB_FC_READ_REGISTERS S=");
-      Serial.print(Start);
-      Serial.print(" L=");
-      Serial.println(WordDataLength);
+      SerialPrint(" MB_FC_READ_REGISTERS S=");
+      SerialPrintUint16_t(Start);
+      SerialPrint(" L=");
+      SerialPrintUint16_t(WordDataLength);
+	  SerialPrintEndl();
     #endif
-    ByteArray[5] = ByteDataLength + 3; //Number of bytes after this one.
+  //  buf[5] = ByteDataLength + 3; //Number of bytes after this one.
+	buf[5] = 6; //Number of bytes after this one.
     for(int i = 0; i < WordDataLength; i++)
     {
-      R[Start + i] =  word(ByteArray[ 13 + i * 2],ByteArray[14 + i * 2]);
+      R[Start + i] =  word(buf[ 13 + i * 2],buf[14 + i * 2]);
+	  #ifdef MODBUS
+	  MB_HoldReg[Start + i] = R[Start + i];
+	  #endif
     }
     MessageLength = 12;
-    client.write(ByteArray, MessageLength);
-    Writes = 1 + Writes * (Writes < 999);
+    Webserver_send(buf, MessageLength);
+    //Writes = 1 + Writes * (Writes < 999);
+
     FC = MB_FC_NONE;
   }
-
+/*
   #ifdef MbDebug
     Serial.print("Mb runs: ");
     Serial.print(Runs);
@@ -435,17 +489,21 @@ ModbusTCPRun(uint8_t FC)
     Serial.print(Writes);
     Serial.println();
   #endif
+  */
 }
 
 
-void Mudbus::SetFC(int fc)
+uint8_t SetFC(int fc)
 {
+  uint8_t FC = 0;
   if(fc == 1) FC = MB_FC_READ_COILS;
   if(fc == 3) FC = MB_FC_READ_REGISTERS;
+  if(fc == 4) FC = MB_FC_READ_INPUT_REGISTERS;
   if(fc == 5) FC = MB_FC_WRITE_COIL;
   if(fc == 6) FC = MB_FC_WRITE_REGISTER;
   if(fc == 15) FC = MB_FC_WRITE_MULTIPLE_COILS;
   if(fc == 16) FC = MB_FC_WRITE_MULTIPLE_REGISTERS;
+  return FC;
 }
 
 
@@ -455,9 +513,9 @@ uint8_t Modbus_TCP_Automat(uint8_t event)
 	uint8_t stateOld=state;
 	//static uint32_t Timer;
 	static uint8_t Timer = 0;
-	static int clo=0;
+	static uint32_t clo=0;
 	#ifdef Modbus_TCP_Automat_LOGGING
-		SerialPrint("  Webserver_automat_Start_state:") ;
+		SerialPrint("  Modbus_automat_Start_state:") ;
 		SerialPrintUint8_t(state);
 		SerialPrintEndl(); 
 	#endif
@@ -499,14 +557,18 @@ uint8_t Modbus_TCP_Automat(uint8_t event)
 				else{
 					state=6;
 					//Timer=millis();
-					StartTimer16(Timer,5);
+					StartTimer16(Timer,1);
 				}
 				break;
+								case SOCK_INIT:
+								state = 3;
+								break;
 				case SOCK_FIN_WAIT:
 				case SOCK_CLOSING:
 				case SOCK_TIME_WAIT:
 				case SOCK_CLOSE_WAIT:
 				case SOCK_LAST_ACK:
+
 				// Force to close the socket
 				WebserverSocket_close();
 				break;
@@ -543,7 +605,7 @@ uint8_t Modbus_TCP_Automat(uint8_t event)
 			
 		case 6:
 			if(Timer16Stopp(Timer)){
-				if(clo>=5 && rsize==0){
+				if(clo>=1000 && rsize==0){
 					StartTimer16(Timer,50);
 					state=7;
 				}
@@ -555,7 +617,6 @@ uint8_t Modbus_TCP_Automat(uint8_t event)
 					else{
 						state=1;
 					}
-					
 				}
 			}
 			break;
@@ -567,6 +628,7 @@ uint8_t Modbus_TCP_Automat(uint8_t event)
 			}
 			break;
 		case 8:
+			rsize=Webserver_recv_size();
 			if(rsize>0){
 				state=9;
 				break;
@@ -580,11 +642,17 @@ uint8_t Modbus_TCP_Automat(uint8_t event)
 				clo=0;
 				Webserver_recv(buf,rsize);
 				#ifdef Modbus_TCP_Automat_LOGGING
-				SerialPrintln("FUNCTION:");
-				SerialPrintUint8_t(buf[7]);
-				SerialPrintEndl();
+					SerialPrintln("FUNCTION:");
+					SerialPrintUint8_t(buf[7]);
+					SerialPrintEndl();
+					for(int i = 0; i<rsize; i++){
+					SerialPrintUint8_t(buf[i]);
+					SerialPrint(",");
+					}
+					SerialPrintEndl();
 				#endif
-
+				 
+				ModbusTCPRun(SetFC(buf[7]));
 				
 				// getidx=strindex((char *)buf,"GET / ");
 
@@ -599,7 +667,9 @@ uint8_t Modbus_TCP_Automat(uint8_t event)
 				if (strindex((char *)buf,"GET /t.htm") >= 0) {state=12;}
 				*/
 				StartTimer16(Timer,2);
-				state = 5;
+				//_delay_ms(20);
+				//	WebserverSocket_disconnect();
+				state = 1;
 				break;
 		case 10:
 				//strcpy((char *)buf,("HTTP/1.0 200 OK\nContent-Type: text/html; charset=windows-1251\nContent-Length:3953\n\n"));
@@ -683,7 +753,7 @@ uint8_t Modbus_TCP_Automat(uint8_t event)
 				}
 			}
 			#ifdef Modbus_TCP_Automat_LOGGING
-				SerialPrint("  Webserver_automat_End_state:") ;
+				SerialPrint("  Modbus_automat_End_state:") ;
 				SerialPrintUint8_t(state);
 				SerialPrintEndl();
 			#endif
