@@ -246,12 +246,12 @@ uint16_t word(uint8_t high,uint8_t low){
 #define bitSet(value, bit) ((value) |= (1UL << (bit)))
 #define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
 #define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
-ModbusTCPRun(uint8_t FC)
+void ModbusTCPRun(uint8_t FC)
 { 
 /* 
   Runs = 1 + Runs * (Runs < 999);
 
-  //****************** Read from socket ****************
+  // ****************** Read from socket ****************
   // For Arduino 0022
   // Client client = MbServer.available();
   // For Arduino 1.0
@@ -289,7 +289,7 @@ ModbusTCPRun(uint8_t FC)
   uint16_t Start, WordDataLength, ByteDataLength, CoilDataLength, MessageLength;
 
   //****************** Read Coils **********************
-/*  if(FC == MB_FC_READ_COILS)
+  if(FC == MB_FC_READ_COILS)
   {
     Start = word(buf[8],buf[9]);
     CoilDataLength = word(buf[10],buf[11]);
@@ -308,7 +308,7 @@ ModbusTCPRun(uint8_t FC)
     {
       for(int j = 0; j < 8; j++)
       {
-        bitWrite(ByteArray[9 + i], j, C[Start + i * 8 + j]);
+        bitWrite(buf[9 + i], j, C[Start + i * 8 + j]);
       }
     }
     MessageLength = ByteDataLength + 9;
@@ -316,7 +316,7 @@ ModbusTCPRun(uint8_t FC)
  //   client.write(ByteArray, MessageLength);
 //    Writes = 1 + Writes * (Writes < 999);
     FC = MB_FC_NONE;
-  }*/
+  }
 
   //****************** Read Registers ******************
   if(FC == MB_FC_READ_REGISTERS)
@@ -381,22 +381,23 @@ ModbusTCPRun(uint8_t FC)
 	    FC = MB_FC_NONE;
     }
   //****************** Write Coil **********************
-/*  if(FC == MB_FC_WRITE_COIL)
+  if(FC == MB_FC_WRITE_COIL)
   {
-    Start = word(ByteArray[8],ByteArray[9]);
-    C[Start] = word(ByteArray[10],ByteArray[11]) > 0;
+    Start = word(buf[8],buf[9]);
+    C[Start] = word(buf[10],buf[11]) > 0;
     #ifdef MbDebug
-      Serial.print(" MB_FC_WRITE_COIL C");
-      Serial.print(Start);
-      Serial.print("=");
-      Serial.println(C[Start]);
+      SerialPrint(" MB_FC_WRITE_COIL C");
+      SerialPrintUint16_t(Start);
+      SerialPrint("=");
+      SerialPrintUint16_t(C[Start]);
+	  SerialPrintEndl();
     #endif
-    ByteArray[5] = 2; //Number of bytes after this one.
+    buf[5] = 2; //Number of bytes after this one.
     MessageLength = 8;
-    client.write(ByteArray, MessageLength);
-    Writes = 1 + Writes * (Writes < 999);
+    //client.write(ByteArray, MessageLength);
+    //Writes = 1 + Writes * (Writes < 999);
     FC = MB_FC_NONE;
-  } */
+  }
 
   //****************** Write Register ******************
   if(FC == MB_FC_WRITE_REGISTER)
@@ -470,7 +471,7 @@ ModbusTCPRun(uint8_t FC)
     {
       R[Start + i] =  word(buf[ 13 + i * 2],buf[14 + i * 2]);
 	  #ifdef MODBUS
-	  MB_HoldReg[Start + i] = R[Start + i];
+		 MB_HoldReg[Start + i] = R[Start + i];
 	  #endif
     }
     MessageLength = 12;
@@ -560,9 +561,10 @@ uint8_t Modbus_TCP_Automat(uint8_t event)
 					StartTimer16(Timer,1);
 				}
 				break;
-								case SOCK_INIT:
-								state = 3;
-								break;
+				case SOCK_INIT:
+					state = 3;
+					break;
+
 				case SOCK_FIN_WAIT:
 				case SOCK_CLOSING:
 				case SOCK_TIME_WAIT:
@@ -671,42 +673,10 @@ uint8_t Modbus_TCP_Automat(uint8_t event)
 				//	WebserverSocket_disconnect();
 				state = 1;
 				break;
-		case 10:
-				//strcpy((char *)buf,("HTTP/1.0 200 OK\nContent-Type: text/html; charset=windows-1251\nContent-Length:3953\n\n"));
-				strcpy((char *)buf,("HTTP/1.0 200 OK\nContent-Type: text/html; charset = utf8\n\n"));
-				strcat((char *)buf,("<!DOCTYPE HTML>\n<html><title>RS to Ethernet</title><body>\n"));
-				strcat((char *)buf,("<h1>Шлюз Ethernet - RS485</h1>\r\n"));
-				strcat((char *)buf,("Время работы "));
-				uint16_t hours =  locUpTime/360000;
-				uint8_t minutes = (locUpTime/6000)%60;
-				uint8_t seconds = (locUpTime/100)%60;
-				sprintf(buf1,"= %i часов, %i минут, %i секунд<br><br></body></html>", hours, minutes, seconds);
-				//strcat((char *)buf,("<A href='t.htm'>Температура в помещении</a>"));
-				//sprintf(buf1,"= %i градусов<br><br><A href='/'>На исходную страницу</a></body></html>",temp);
-				strcat((char *)buf,buf1);
-				Webserver_send(buf,strlen((char *)buf));
-				WebserverSocket_disconnect();
-				state=1;
-				break;
-		case 11:
-				
-				
-				
-				break;
-		case 12:
-				strcpy((char *)buf,("HTTP/1.0 200 OK\nContent-Type: text/html; charset=utf8\n\n"));
-				strcat((char *)buf,("<!DOCTYPE HTML>\n<html><title>RS to Ethernet</title><body>\n"));
-				strcat((char *)buf,("<h1>Температура в помещении</h1>\r\n"));
-				strcat((char *)buf,("<A href='index.htm'>На главную</a>"));
-				Webserver_send(buf,strlen((char *)buf));
-				WebserverSocket_disconnect();
-				state=1;
-				//state=11;
-				break;
+
+
 		case 13:
 
-
-				
 				WebserverSocket_disconnect();
 				state=1;
 				break;

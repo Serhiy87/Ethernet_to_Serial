@@ -9,17 +9,17 @@
  #ifdef LOGGING
 	 //#define Ethernet_Automat_BEGIN_LOGGING
 	 //#define send_DHCP_MESSAGE_Automat_LOGGING
-	 //#define DHCP_Automat_LOGGING
+	//#define DHCP_Automat_LOGGING
 	 //#define UDP_DEBUG
-	 //#define SNMP_Automat_LOGGING
+	 #define SNMP_Automat_LOGGING
 	 //#define Webserver_Automat_LOGGING
-	 #define Modbus_TCP_Automat_LOGGING
+	 //#define Modbus_TCP_Automat_LOGGING
 #endif
 
 
 
  // #define PROGMEM _attribute_((progmem))
- #define F_CPU 16000000UL
+#define F_CPU 16000000UL
 #include <avr/io.h>
 #include <stdint.h>
 #include <util/delay.h>
@@ -157,8 +157,8 @@ void sysInit(){
 	#endif
 }
 void sysCycle(){
-TimersInc();
-TimeCycle();
+	TimersInc();
+	TimeCycle();
 }
 
 
@@ -171,7 +171,7 @@ int main(void)
 	Ethernet_Automat(0);
     while (1) 
     {
-	_delay_ms(10);
+		_delay_ms(100);
 		sysCycle();
 		LED_Cycle();
 		Ethernet_Automat(1);
@@ -182,7 +182,6 @@ int main(void)
 		USART_Cycle();
 		#endif
 	// W5100write(0x1A, 0x55);
-
     }
 }
 

@@ -366,8 +366,8 @@ MB_M_CtrlProc(uint8_t MB_N)
 		Over = FailSlave(MB_N);
 	else {
 		USART_Func(MB_N, LED);
-		MB_Slave *Slave;
-		MB_Query *Query;
+		MB_Slave *Slave = NULL;
+		MB_Query *Query = NULL;
 		uint8_t Addr, Func;
 		if (LastProcSingle) {
 			Addr = MB_SingleQuery[MB_N].Addr;
@@ -382,7 +382,7 @@ MB_M_CtrlProc(uint8_t MB_N)
 		if (MB_Frame[MB_N][0]!=Addr || MB_Frame[MB_N][1]!=Func)
 			Over = FailSlave(MB_N);
 		else {
-			uint8_t Err;
+			uint8_t Err = 0;
 			switch (Func) {
 			case 1: case 2:
 				Err = MB_M_ReadDiscr(MB_N, Query);
