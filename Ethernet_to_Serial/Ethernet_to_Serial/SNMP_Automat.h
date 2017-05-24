@@ -163,32 +163,7 @@ typedef struct  {
 
 }SNMP_OID;
 
-typedef enum{Byte,Word}varTypes;
-typedef struct {
-	const char* oid;
-	SNMP_SYNTAXES syn;
-	void * variable;
-	uint8_t variableType;
-	uint8_t AccessLevel;
-}SNMP_FIELD;
 
-enum{READ, READWRITE};
-#ifdef MODBUS
-SNMP_FIELD SNMP_VARS[] = {
-	{"1.3.6.1.4.1.2017.12.1.0",  SNMP_SYNTAX_INT32,  &MB_HoldReg[0], Word, READWRITE},
-	{"1.3.6.1.4.1.2017.12.2.0",  SNMP_SYNTAX_INT32,  &MB_HoldReg[1], Word, READWRITE},
-	{"1.3.6.1.4.1.2017.12.3.0",  SNMP_SYNTAX_INT32,  &MB_HoldReg[2], Word, READWRITE},
-	{"1.3.6.1.4.1.2017.12.4.0",  SNMP_SYNTAX_INT32,  &MB_HoldReg[3], Word, READWRITE},
-	{"1.3.6.1.4.1.2017.12.5.0",  SNMP_SYNTAX_INT32,  &MB_InReg[9],   Word, READ},
-	{"1.3.6.1.4.1.2017.12.6.0",  SNMP_SYNTAX_INT32,  &MB_InReg[10],  Word, READ},
-	{"1.3.6.1.4.1.2017.12.7.0",  SNMP_SYNTAX_INT32,  &MB_InReg[11],  Word, READ},
-	{"1.3.6.1.4.1.2017.12.8.0",  SNMP_SYNTAX_INT32,  &MB_InReg[12],  Word, READ},
-	{"1.3.6.1.4.1.2017.12.9.0",  SNMP_SYNTAX_INT32,  &MB_InReg[13],  Word, READ},
-	{"1.3.6.1.4.1.2017.12.10.0", SNMP_SYNTAX_INT32,  &MB_InReg[14],  Word, READ},
-	{"1.3.6.1.4.1.2017.12.11.0", SNMP_SYNTAX_INT32,  &MB_InReg[15],  Word, READ},
-	{"1.3.6.1.4.1.2017.12.12.0", SNMP_SYNTAX_INT32,  &MB_InReg[16],  Word, READ},
-};
-#endif
 	void SNMP_OID_toString(SNMP_OID oid, char *buffer) {
 		buffer[0] = '1';
 		buffer[1] = '.';
@@ -679,8 +654,80 @@ uint16_t _size=4;
 uint32_t UtoS_Timer=0;
 uint16_t SerialVal1, SerialVal2;
 
+typedef enum{Byte,Word,Text,Long_Word,Long_Int}varTypes;
+typedef struct {
+	const char* oid;
+	SNMP_SYNTAXES syn;
+	void * variable;
+	uint8_t variableType;
+	uint8_t AccessLevel;
+}SNMP_FIELD;
 
+enum{READ, READWRITE};
+#ifdef MODBUS
+SNMP_FIELD SNMP_VARS[] = {
+	{"1.3.6.1.2.1.1.1.0",		 SNMP_SYNTAX_OCTETS,	locDescr,		Text,		READ},
+	{"1.3.6.1.2.1.1.2.0",		 SNMP_SYNTAX_OCTETS,	locObjectID,	Text,		READ},
+	{"1.3.6.1.2.1.1.3.0",		 SNMP_SYNTAX_TIME_TICKS,&locUpTime,		Long_Word,	READ},
+	{"1.3.6.1.2.1.1.4.0",		 SNMP_SYNTAX_OCTETS,	locContact,		Text,		READWRITE},
+	{"1.3.6.1.2.1.1.5.0",		 SNMP_SYNTAX_OCTETS,	locName,		Text,		READWRITE},
+	{"1.3.6.1.2.1.1.6.0",		 SNMP_SYNTAX_OCTETS,	locLocation,	Text,		READWRITE},
+	{"1.3.6.1.2.1.1.7.0",		 SNMP_SYNTAX_INT,		&locServices,	Long_Int,	READ},
+	{"1.3.6.1.4.1.2017.12.1.0",  SNMP_SYNTAX_INT32,		&MB_HoldReg[0], Word,		READWRITE},
+	{"1.3.6.1.4.1.2017.12.2.0",  SNMP_SYNTAX_INT32,		&MB_HoldReg[1], Word,		READWRITE},
+	{"1.3.6.1.4.1.2017.12.3.0",  SNMP_SYNTAX_INT32,		&MB_HoldReg[2], Word,		READWRITE},
+	{"1.3.6.1.4.1.2017.12.4.0",  SNMP_SYNTAX_INT32,		&MB_HoldReg[3], Word,		READWRITE},
+	{"1.3.6.1.4.1.2017.12.5.0",  SNMP_SYNTAX_INT32,		&MB_InReg[9],   Word,		READ},
+	{"1.3.6.1.4.1.2017.12.6.0",  SNMP_SYNTAX_INT32,		&MB_InReg[10],  Word,		READ},
+	{"1.3.6.1.4.1.2017.12.7.0",  SNMP_SYNTAX_INT32,		&MB_InReg[11],  Word,		READ},
+	{"1.3.6.1.4.1.2017.12.8.0",  SNMP_SYNTAX_INT32,		&MB_InReg[12],  Word,		READ},
+	{"1.3.6.1.4.1.2017.12.9.0",  SNMP_SYNTAX_INT32,		&MB_InReg[13],  Word,		READ},
+	{"1.3.6.1.4.1.2017.12.10.0", SNMP_SYNTAX_INT32,		&MB_InReg[14],  Word,		READ},
+	{"1.3.6.1.4.1.2017.12.11.0", SNMP_SYNTAX_INT32,		&MB_InReg[15],  Word,		READ},
+	{"1.3.6.1.4.1.2017.12.12.0", SNMP_SYNTAX_INT32,		&MB_InReg[16],  Word,		READ},
+};
+#endif
+SNMP_ERR_CODES Encode(void* C_value, uint8_t C_type, SNMP_VALUE *snmp_value, SNMP_SYNTAXES syn ){
+	SNMP_ERR_CODES status = 0;
+	if((syn == SNMP_SYNTAX_INT)&&(C_type == Word)){
+		status = encodeInt16ToInt(snmp_value, SNMP_SYNTAX_INT, *(int16_t *)C_value);
+		return status;
+	}
+	if((syn == SNMP_SYNTAX_OCTETS)&&(C_type == Text)){
+		status = encodeStringToOctetString(snmp_value, SNMP_SYNTAX_OCTETS, (const char*)C_value);
+		return status;
+	}
+	if((syn == SNMP_SYNTAX_TIME_TICKS)&&(C_type == Long_Word)){
+		status = encodeUint32ToUint32(snmp_value, SNMP_SYNTAX_TIME_TICKS, *(uint32_t *)C_value);
+		return status;
+	}
+	if((syn == SNMP_SYNTAX_INT)&&(C_type == Long_Int)){
+		status = encodeInt32ToInt32(snmp_value, SNMP_SYNTAX_INT32, *(uint32_t*)C_value);
+		return status;
+	}
+};
 
+SNMP_ERR_CODES Decode(SNMP_VALUE *snmp_value, SNMP_SYNTAXES syn, void* C_value, uint8_t C_type){
+	SNMP_ERR_CODES status = 0;
+	if((C_type == Text)&&(syn == SNMP_SYNTAX_OCTETS)){
+		status = decodeOctetStringToString(snmp_value, (const char*)locContact, strlen((const char*)locContact));
+		return status;
+	}
+	if((C_type == Word)&&(syn == SNMP_SYNTAX_INT)){
+		status = decodeInt16toHoldReg(snmp_value, (int16_t *)C_value);
+		return status;
+	}
+	if((syn == SNMP_SYNTAX_TIME_TICKS)&&(C_type == Long_Word)){
+
+		return status;
+	}
+	if((syn == SNMP_SYNTAX_INT)&&(C_type == Long_Int)){
+
+		return status;
+	}
+	
+
+};
 SNMP_API_STAT_CODES SNMP_requestPdu(SNMP_PDU *pdu)
 {
 	//char *community;
@@ -1009,411 +1056,14 @@ void pduReceived()  // is being called when an SNMP packet has been received
 		Serial.println(SNMP_PDU_SET);*/
 		//
 		char tmpOIDfs[SNMP_MAX_OID_LEN];
-		 SNMP_OID_toString(pdu.OID, oid);
-		
-		//
-		/*Serial.print("OID: ");
-		Serial.println(oid);*/
-		//
-		//SNMP_VARS_Processing( oid,  &pdu);
-		if ( strcmp_P(oid, sysDescr ) == 0 )
-		{
-			// handle sysDescr (set/get) requests
-			if ( pdu.type == SNMP_PDU_SET )
-			{
-				// response packet from set-request - object is read-only
-				encodeNullToNull(&pdu.VALUE, SNMP_SYNTAX_NULL);
-				//pdu.VALUE.encode(SNMP_SYNTAX_NULL);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = SNMP_ERR_READ_ONLY;
-			}
-			else if( pdu.type == SNMP_PDU_GET)
-			{
-				// response packet from get-request - locDescr
-				status = encodeStringToOctetString(&pdu.VALUE, SNMP_SYNTAX_OCTETS, locDescr);
-				//status = pdu.VALUE.encode(SNMP_SYNTAX_OCTETS, locDescr);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}else if( pdu.type == SNMP_PDU_GET_NEXT ){
-			
-					//strcpy_P((pdu.OID.data),sysObjectID);
-					strcpy_P ( tmpOIDfs, sysObjectID ); 
-					SNMP_OID_fromString(&(pdu.OID), tmpOIDfs);
-					status = encodeStringToOctetString(&pdu.VALUE, SNMP_SYNTAX_OCTETS, locObjectID);
-					pdu.type = SNMP_PDU_RESPONSE;
-					pdu.error = status;
-			}
-			//
-		/*	#ifdef DEBUG
-			Serial << "sysDescr..." << locDescr << " " << pdu.VALUE.size << endl;
-			#endif*/
-		}
-		
-		else if ( strcmp_P(oid, sysObjectID ) == 0 )
-		{
-			// handle sysName (set/get) requests
-			if ( pdu.type == SNMP_PDU_SET )
-			{
-				// response packet from set-request - object is read-only
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = SNMP_ERR_READ_ONLY;
-			}
-			else if( pdu.type == SNMP_PDU_GET)
-			{
-				// response packet from get-request - locUpTime
-				//status = pdu.VALUE.encode(SNMP_SYNTAX_OCTETS, locObjectID);
-				status = encodeStringToOctetString(&pdu.VALUE, SNMP_SYNTAX_OCTETS, locObjectID);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}else if( pdu.type == SNMP_PDU_GET_NEXT ){
-				strcpy_P ( tmpOIDfs, sysUpTime );
-				SNMP_OID_fromString(&(pdu.OID), tmpOIDfs);
-				status = encodeUint32ToUint32(&pdu.VALUE, SNMP_SYNTAX_TIME_TICKS, locUpTime);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}
-			//
-			/*#ifdef DEBUG
-			Serial << "ObjectID" << locObjectID << " " << pdu.VALUE.size << endl;
-			#endif*/
-		}
-		
-		else if ( strcmp_P(oid, sysUpTime ) == 0 )
-		{
-			// handle sysName (set/get) requests
-			if ( pdu.type == SNMP_PDU_SET )
-			{
-				// response packet from set-request - object is read-only
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = SNMP_ERR_READ_ONLY;
-			}
-			else if( pdu.type == SNMP_PDU_GET)
-			{
-				// response packet from get-request - locUpTime
-				//status = pdu.VALUE.encode(SNMP_SYNTAX_TIME_TICKS, locUpTime);
-				status = encodeUint32ToUint32(&pdu.VALUE, SNMP_SYNTAX_TIME_TICKS, locUpTime);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}else if( pdu.type == SNMP_PDU_GET_NEXT ){
-				strcpy_P ( tmpOIDfs, sysContact );
-				SNMP_OID_fromString(&(pdu.OID), tmpOIDfs);
-				status = encodeStringToOctetString(&pdu.VALUE, SNMP_SYNTAX_OCTETS, locContact);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}
-			//
-		/*	#ifdef DEBUG
-			Serial << "sysUpTime..." << locUpTime << " " << pdu.VALUE.size << endl;
-			#endif*/
-		}
-		
+		SNMP_OID_toString(pdu.OID, oid);
 
-		
-		else if ( strcmp_P(oid, sysContact ) == 0 )
-		{
-			// handle sysContact (set/get) requests
-			if ( pdu.type == SNMP_PDU_SET )
-			{
-				// response packet from set-request - object is read/write
-				//status = pdu.VALUE.decode(locContact, strlen(locContact));
-				status = decodeOctetStringToString(&pdu.VALUE, locContact, strlen(locContact));
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}
-			else if( pdu.type == SNMP_PDU_GET)
-			{
-				// response packet from get-request - locContact
-				//status = pdu.VALUE.encode(SNMP_SYNTAX_OCTETS, locContact);
-				status = encodeStringToOctetString(&pdu.VALUE, SNMP_SYNTAX_OCTETS, locContact);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}else if( pdu.type == SNMP_PDU_GET_NEXT ){
-				strcpy_P ( tmpOIDfs, sysName );
-				SNMP_OID_fromString(&(pdu.OID), tmpOIDfs);
-				status = encodeStringToOctetString(&pdu.VALUE, SNMP_SYNTAX_OCTETS, locName);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}
-			//
-		/*	#ifdef DEBUG
-			Serial << "sysContact..." << locContact << " " << pdu.VALUE.size << endl;
-			#endif*/
-		}
-
-				else if ( strcmp_P(oid, sysName ) == 0 )
-		{
-			// handle sysName (set/get) requests
-			if ( pdu.type == SNMP_PDU_SET )
-			{
-				// response packet from set-request - object is read/write
-				//status = pdu.VALUE.decode(locName, strlen(locName));
-				status = decodeOctetStringToString(&pdu.VALUE, locName, strlen(locName));
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}
-			else if( pdu.type == SNMP_PDU_GET)
-			{
-				// response packet from get-request - locName
-				//status = pdu.VALUE.encode(SNMP_SYNTAX_OCTETS, locName);
-				status = encodeStringToOctetString(&pdu.VALUE, SNMP_SYNTAX_OCTETS, locName);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}else if( pdu.type == SNMP_PDU_GET_NEXT ){
-				strcpy_P ( tmpOIDfs, sysLocation );
-				SNMP_OID_fromString(&(pdu.OID), tmpOIDfs);
-				status = encodeStringToOctetString(&pdu.VALUE, SNMP_SYNTAX_OCTETS, locLocation);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}
-			//
-		/*	#ifdef DEBUG
-			Serial << "sysName..." << locName << " " << pdu.VALUE.size << endl;
-			#endif*/
-		}
-		
-		else if ( strcmp_P(oid, sysLocation ) == 0 )
-		{
-			// handle sysLocation (set/get) requests
-			if ( pdu.type == SNMP_PDU_SET )
-			{
-				// response packet from set-request - object is read/write
-				//status = pdu.VALUE.decode(locLocation, strlen(locLocation));
-				status = decodeOctetStringToString(&pdu.VALUE, locLocation, strlen(locLocation));
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}
-			else if( pdu.type == SNMP_PDU_GET)
-			{
-				// response packet from get-request - locLocation
-				//status = pdu.VALUE.encode(SNMP_SYNTAX_OCTETS, locLocation);
-				status = encodeStringToOctetString(&pdu.VALUE, SNMP_SYNTAX_OCTETS, locLocation);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}else if( pdu.type == SNMP_PDU_GET_NEXT ){
-				strcpy_P ( tmpOIDfs, sysServices );
-				SNMP_OID_fromString(&(pdu.OID), tmpOIDfs);
-				status = encodeInt16ToInt(&pdu.VALUE, SNMP_SYNTAX_INT, locServices);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}
-			//
-		/*	#ifdef DEBUG
-			Serial << "sysLocation..." << locLocation << " " << pdu.VALUE.size << endl;
-			#endif*/
-		}
-		
-		else if ( strcmp_P(oid, sysServices) == 0 )
-		{
-			// handle sysServices (set/get) requests
-			if ( pdu.type == SNMP_PDU_SET )
-			{
-				// response packet from set-request - object is read-only
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = SNMP_ERR_READ_ONLY;
-			}
-			else if( pdu.type == SNMP_PDU_GET)
-			{
-				// response packet from get-request - locServices
-				//status = pdu.VALUE.encode(SNMP_SYNTAX_INT, locServices);
-				status = encodeInt16ToInt(&pdu.VALUE, SNMP_SYNTAX_INT, locServices);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}else if( pdu.type == SNMP_PDU_GET_NEXT ){
-			strcpy_P ( tmpOIDfs, AnalogPin0 );
-			SNMP_OID_fromString(&(pdu.OID), tmpOIDfs);
-			status = encodeInt32ToInt32(&pdu.VALUE, SNMP_SYNTAX_INT32, 777);
-			pdu.type = SNMP_PDU_RESPONSE;
-			pdu.error = status;
-			}
-			//
-		/*	#ifdef DEBUG
-			Serial << "locServices..." << locServices << " " << pdu.VALUE.size << endl;
-			#endif*/
-		}
-		
-		else if ( strcmp_P(oid, AnalogPin0 ) == 0 ) // Analog Pin 0 Level request
-		{
-			// handle sysName (set/get) requests
-			if ( pdu.type == SNMP_PDU_SET )
-			{
-				// response packet from set-request - object is read-only
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = SNMP_ERR_READ_ONLY;
-			}
-			else if( pdu.type == SNMP_PDU_GET)
-			{
-				// response packet from get-request - AnalogPin0
-				//status = pdu.VALUE.encode(SNMP_SYNTAX_INT32, 777);
-				status = encodeInt32ToInt32(&pdu.VALUE, SNMP_SYNTAX_INT32, 777);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}else if( pdu.type == SNMP_PDU_GET_NEXT ){
-				strcpy_P ( tmpOIDfs, ledState );
-				SNMP_OID_fromString(&(pdu.OID), tmpOIDfs);			
-				status = encodeInt32ToInt32(&pdu.VALUE, SNMP_SYNTAX_INT32, ledstate);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}
-			//      Serial << "v_AnalogPin0..." << v_AnalogPin0 << " " << pdu.VALUE.size << endl;
-		}
-
-
-		else if ( strcmp_P(oid, ledState ) == 0 ) // Analog Pin 0 Level request
-		{
-
-
-			if ( pdu.type == SNMP_PDU_SET )
-			{
-				// response packet from set-request - object is read/write
-				//status = pdu.VALUE.decode(&ledstate);
-				status = decodeInt32ToInt32(&pdu.VALUE, &ledstate);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}
-			else if( pdu.type == SNMP_PDU_GET)
-			{
-				
-				// response packet from get-request - AnalogPin0
-				//status = pdu.VALUE.encode(SNMP_SYNTAX_INT32, ledstate);
-				status = encodeInt32ToInt32(&pdu.VALUE, SNMP_SYNTAX_INT32, ledstate);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}else if( pdu.type == SNMP_PDU_GET_NEXT ){
-				strcpy_P ( tmpOIDfs, Tfree2cond );
-				SNMP_OID_fromString(&(pdu.OID), tmpOIDfs);			
-				status = encodeInt32ToInt32(&pdu.VALUE, SNMP_SYNTAX_INT32, Tfree2cond_var);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}
-			//      Serial << "v_AnalogPin0..." << v_AnalogPin0 << " " << pdu.VALUE.size << endl;
-		}
-
-		else if ( strcmp_P(oid, Tfree2cond ) == 0 ) // Analog Pin 0 Level request
-		{
-
-
-			if ( pdu.type == SNMP_PDU_SET )
-			{
-				// response packet from set-request - object is read/write
-				//status = pdu.VALUE.decode(&Tfree2cond_var);
-				status = decodeInt32ToInt32(&pdu.VALUE, &Tfree2cond_var);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}
-			else if( pdu.type == SNMP_PDU_GET)
-			{
-				
-				// response packet from get-request - AnalogPin0
-				//status = pdu.VALUE.encode(SNMP_SYNTAX_INT32, Tfree2cond_var);
-				status = encodeInt32ToInt32(&pdu.VALUE, SNMP_SYNTAX_INT32, Tfree2cond_var);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}else if( pdu.type == SNMP_PDU_GET_NEXT ){
-				strcpy_P ( tmpOIDfs, Troom );
-				SNMP_OID_fromString(&(pdu.OID), tmpOIDfs);
-				status = encodeInt32ToInt32(&pdu.VALUE, SNMP_SYNTAX_INT32, Troom_var);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}
-			//      Serial << "v_AnalogPin0..." << v_AnalogPin0 << " " << pdu.VALUE.size << endl;
-		}
-		else if ( strcmp_P(oid, Troom ) == 0 ) // Analog Pin 0 Level request
-		{
-			if ( pdu.type == SNMP_PDU_SET )
-			{
-				// response packet from set-request - object is read/write
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = SNMP_ERR_READ_ONLY;
-			}
-			else if( pdu.type == SNMP_PDU_GET)
-			{	
-				// response packet from get-request - AnalogPin0
-				//status = pdu.VALUE.encode(SNMP_SYNTAX_INT32, Troom_var);
-				status = encodeInt32ToInt32(&pdu.VALUE, SNMP_SYNTAX_INT32, Troom_var);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}else if( pdu.type == SNMP_PDU_GET_NEXT ){
-				strcpy_P ( tmpOIDfs, Tair );
-				SNMP_OID_fromString(&(pdu.OID), tmpOIDfs);
-				status = encodeInt32ToInt32(&pdu.VALUE, SNMP_SYNTAX_INT32, Tair_var);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}
-			//      Serial << "v_AnalogPin0..." << v_AnalogPin0 << " " << pdu.VALUE.size << endl;
-		}
-		else if ( strcmp_P(oid, Tair ) == 0 ) // Analog Pin 0 Level request
-		{
-
-
-			if ( pdu.type == SNMP_PDU_SET )
-			{
-				// response packet from set-request - object is read/write
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = SNMP_ERR_READ_ONLY;
-			}
-			else if( pdu.type == SNMP_PDU_GET)
-			{
-				
-				// response packet from get-request - AnalogPin0
-				//status = pdu.VALUE.encode(SNMP_SYNTAX_INT32, Tair_var);
-				//SerialPrintln("GET");
-				status = encodeInt32ToInt32(&pdu.VALUE, SNMP_SYNTAX_INT32, Tair_var);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}else if( pdu.type == SNMP_PDU_GET_NEXT ){
-				strcpy_P ( tmpOIDfs, Tcond );
-				SNMP_OID_fromString(&(pdu.OID), tmpOIDfs);
-				status = encodeInt32ToInt32(&pdu.VALUE, SNMP_SYNTAX_INT32, Tair_var);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}
-			//      Serial << "v_AnalogPin0..." << v_AnalogPin0 << " " << pdu.VALUE.size << endl;
-		}
-		else if ( strcmp_P(oid, Tcond ) == 0 ) // Analog Pin 0 Level request
-		{
-
-
-			if ( pdu.type == SNMP_PDU_SET )
-			{
-				// response packet from set-request - object is read/write
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = SNMP_ERR_READ_ONLY;
-			}
-			else if( pdu.type == SNMP_PDU_GET)
-			{
-				
-				// response packet from get-request - AnalogPin0
-				//status = pdu.VALUE.encode(SNMP_SYNTAX_INT32, Tcond_var);
-				status = encodeInt32ToInt32(&pdu.VALUE, SNMP_SYNTAX_INT32, Tair_var);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}else if( pdu.type == SNMP_PDU_GET_NEXT ){
-				SNMP_OID_fromString(&(pdu.OID), SNMP_VARS[0].oid);
-				status = encodeInt16ToInt(&pdu.VALUE, SNMP_SYNTAX_INT, *(int16_t *)SNMP_VARS[0].variable);
-				pdu.type = SNMP_PDU_RESPONSE;
-				pdu.error = status;
-			}
-			//      Serial << "v_AnalogPin0..." << v_AnalogPin0 << " " << pdu.VALUE.size << endl;
-		}
 		#ifdef MODBUS
-		else if(SNMP_VARS_Processing( oid,  &pdu) == 1){
+		/*else*/ if(SNMP_VARS_Processing( oid,  &pdu) == 1){
 
 		}
 		#endif
-
 	
-
-
-
-
-		// add more custom OID blocks here
-
-
-
-
-
-
-		
 		else
 		{
 			// oid does not exist
@@ -1569,126 +1219,43 @@ extern void resetSNMP(void){
 
 
 uint8_t SNMP_VARS_Processing(char* oid, SNMP_PDU* pdu){
-		for(uint8_t i = 0; i<sizeof(SNMP_VARS)/sizeof(SNMP_FIELD); i++){
-			 if(strcmp(oid, SNMP_VARS[i].oid) == 0){
-				switch(SNMP_VARS[i].syn){
-					case SNMP_SYNTAX_OCTETS:
-					case SNMP_SYNTAX_OPAQUE:
-							if ( pdu->type == SNMP_PDU_SET )
-							{
-								status = decodeOctetStringToString(&pdu->VALUE, *(const char *)SNMP_VARS[i].variable, strlen((const char *)SNMP_VARS[i].variable));
-								pdu->type = SNMP_PDU_RESPONSE;
-								pdu->error = status;
-							}
-							else
-							{
-								status = encodeStringToOctetString(&pdu->VALUE, SNMP_SYNTAX_OCTETS, *(const char *)SNMP_VARS[i].variable);
-								pdu->type = SNMP_PDU_RESPONSE;
-								pdu->error = status;
-							}return 1;
-							break;
-					case SNMP_SYNTAX_INT:
-							if ( pdu->type == SNMP_PDU_SET )
-							{
-									if(SNMP_VARS[i].AccessLevel == READWRITE){
-									status = decodeInt16toHoldReg(&pdu->VALUE, (int16_t *)SNMP_VARS[i].variable);
-									pdu->type = SNMP_PDU_RESPONSE;
-									pdu->error = status;
-								}else{
-									pdu->type = SNMP_PDU_RESPONSE;
-									pdu->error = SNMP_ERR_READ_ONLY;
-								}
-							}
-							else
-							{
-								if ( pdu->type == SNMP_PDU_GET ){
-								status = encodeInt16ToInt(&pdu->VALUE, SNMP_SYNTAX_INT, *(int16_t *)SNMP_VARS[i].variable);
-								pdu->type = SNMP_PDU_RESPONSE;
-								pdu->error = status;
-									}else if( pdu->type == SNMP_PDU_GET_NEXT ){
-									if(i<(sizeof(SNMP_VARS)/sizeof(SNMP_FIELD) - 1)){
-									SNMP_OID_fromString(&(pdu->OID), SNMP_VARS[i+1].oid);
-									status = encodeInt16ToInt(&pdu->VALUE, SNMP_SYNTAX_INT, *(int16_t *)SNMP_VARS[i+1].variable);
-									pdu->type = SNMP_PDU_RESPONSE;
-									pdu->error = status;
-									}else{
-									pdu->type = SNMP_PDU_RESPONSE;
-									pdu->error = SNMP_ERR_NO_SUCH_NAME;
-									}
-								}
-							}
-							return 1;
-							break;
-			/*		case SNMP_SYNTAX_INT32:
-							if ( pdu->type == SNMP_PDU_SET )
-							{
-								status = decodeInt32ToInt32(&pdu->VALUE, (int32_t *)SNMP_VARS[i].variable);
-								pdu->type = SNMP_PDU_RESPONSE;
-								pdu->error = status;
-							}
-							else
-							{
-								status = encodeInt32ToInt32(&pdu->VALUE, SNMP_SYNTAX_INT32, *(int32_t *)SNMP_VARS[i].variable);
-								pdu->type = SNMP_PDU_RESPONSE;
-								pdu->error = status;
-							}
-							return 1;
-							break;*/
-					case SNMP_SYNTAX_COUNTER:
-					case SNMP_SYNTAX_TIME_TICKS:
-					case SNMP_SYNTAX_GAUGE:
-					case SNMP_SYNTAX_UINT32:
-							if ( pdu->type == SNMP_PDU_SET )
-							{
-								status = decodeUint32CounterTimeticksGaugeToUint32(&pdu->VALUE, (uint32_t *)SNMP_VARS[i].variable);
-								pdu->type = SNMP_PDU_RESPONSE;
-								pdu->error = status;
-							}
-							else
-							{
-								status = encodeUint32ToUint32(&pdu->VALUE, SNMP_SYNTAX_UINT32, *(uint32_t *)SNMP_VARS[i].variable);
-								pdu->type = SNMP_PDU_RESPONSE;
-								pdu->error = status;
-							}
-							return 1;
-							break;
-					case SNMP_SYNTAX_IP_ADDRESS:
-					case SNMP_SYNTAX_NSAPADDR:
-							if ( pdu->type == SNMP_PDU_SET )
-							{
-								status = decodeIpAddressToByteArray(&pdu->VALUE, (byte *)SNMP_VARS[i].variable);
-								pdu->type = SNMP_PDU_RESPONSE;
-								pdu->error = status;
-							}
-							else
-							{
-								status = encodeByteArrayToIpAddress(&pdu->VALUE, SNMP_SYNTAX_IP_ADDRESS, *(byte *)SNMP_VARS[i].variable);
-								pdu->type = SNMP_PDU_RESPONSE;
-								pdu->error = status;
-							}
-							return 1;
-							break;
-					case SNMP_SYNTAX_BOOL:
-							if ( pdu->type == SNMP_PDU_SET )
-							{
-								status = decodeBoolToUint8(&pdu->VALUE, (uint8_t *)SNMP_VARS[i].variable);
-								pdu->type = SNMP_PDU_RESPONSE;
-								pdu->error = status;
-							}
-							else
-							{
-								status = encodeUint8ToBool(&pdu->VALUE, SNMP_SYNTAX_IP_ADDRESS, *(uint8_t *)SNMP_VARS[i].variable);
-								pdu->type = SNMP_PDU_RESPONSE;
-								pdu->error = status;
-							}
-							return 1;
-							break;
-						
+	for(uint8_t i = 0; i<sizeof(SNMP_VARS)/sizeof(SNMP_FIELD); i++){
+				if(strcmp(oid, SNMP_VARS[i].oid) == 0){
+					if( pdu->type == SNMP_PDU_SET)
+					{
+						if(SNMP_VARS[i].AccessLevel == READ){
+							pdu->type = SNMP_PDU_RESPONSE;
+							pdu->error = SNMP_ERR_READ_ONLY;
+						}
+						else{
+							status = Decode(&pdu->VALUE,SNMP_VARS[i].syn,SNMP_VARS[i].variable, SNMP_VARS[i].variableType);
+							pdu->type = SNMP_PDU_RESPONSE;
+							pdu->error = status;
+						}
+					}
+					else if(pdu->type == SNMP_PDU_GET){
+						status = Encode(SNMP_VARS[i].variable, SNMP_VARS[i].variableType, &pdu->VALUE,SNMP_VARS[i].syn);
+						pdu->type = SNMP_PDU_RESPONSE;
+						pdu->error = status;
+					}
+					else if( pdu->type == SNMP_PDU_GET_NEXT ){
+						if(i<(sizeof(SNMP_VARS)/sizeof(SNMP_FIELD) - 1)){
+							SNMP_OID_fromString(&(pdu->OID), SNMP_VARS[i+1].oid);
+							status = Encode(SNMP_VARS[i+1].variable, SNMP_VARS[i+1].variableType, &pdu->VALUE,SNMP_VARS[i+1].syn);
+							pdu->type = SNMP_PDU_RESPONSE;
+							pdu->error = status;
+							}else{
+							pdu->type = SNMP_PDU_RESPONSE;
+							pdu->error = SNMP_ERR_NO_SUCH_NAME;
+						}
+					}
+					return 1;
 				}
-			 }
-		 }
-		 return 0;
-}
+		}
+			return 0;
+	}
+
+
 
 #endif
 #endif /* SNMP_AUTOMAT_H_ */

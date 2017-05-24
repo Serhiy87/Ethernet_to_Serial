@@ -19,7 +19,7 @@
 uint8_t DHCP_Enable=1;
 uint8_t static_IP[4]={10,0,0,76};
 uint8_t Ethernet_Automat(uint8_t event);
-extern void resetEthernet(void){
+ void resetEthernet(void){
 	
 	Ethernet_Automat(0);
 	//SerialPrintln("RESET ETHERNET!!!");
