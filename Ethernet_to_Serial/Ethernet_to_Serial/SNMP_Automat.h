@@ -915,15 +915,16 @@ SNMP_API_STAT_CODES SNMP_requestPdu(SNMP_PDU *pdu)
 		} else if ( (pdu->type == SNMP_PDU_GET && comLen == _getSize)|| (pdu->type == SNMP_PDU_GET_NEXT && comLen == _getSize)) {
 		//
 		for ( i = 0; i < _getSize; i++ ) {
-			if( _packet[verEnd + 3 + i] != (byte)_getCommName[i] ) {
-				// set pdu error
-				pdu->error = SNMP_ERR_NO_SUCH_NAME;
-				//
-				return SNMP_API_STAT_NO_SUCH_NAME;
-			}
-		}
+											if( _packet[verEnd + 3 + i] != (byte)_getCommName[i] ) {
+												// set pdu error
+												pdu->error = SNMP_ERR_NO_SUCH_NAME;
+												//
+												return SNMP_API_STAT_NO_SUCH_NAME;
+											}
+										}
 		} else {
-		
+		pdu->VALUE.size = 0;
+		pdu->OID.size = 0;
 		// set pdu error
 		pdu->error = SNMP_ERR_NO_SUCH_NAME;
 		//
