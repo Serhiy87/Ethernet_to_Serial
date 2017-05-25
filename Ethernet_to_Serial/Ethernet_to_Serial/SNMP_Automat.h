@@ -12,6 +12,7 @@
 #include "String.h"
 #include "avr/pgmspace.h"
 #include "UDP_Automat.h"
+#include "stdio.h"
 typedef uint8_t  byte ;
 byte count=0;
 extern
@@ -687,6 +688,69 @@ SNMP_FIELD SNMP_VARS[] = {
 	{"1.3.6.1.4.1.2017.12.12.0", SNMP_SYNTAX_INT32,		&MB_InReg[16],  Word,		READ},
 };
 #endif
+unsigned int GetOIDCount(const char* str){
+	unsigned int i, count=0;
+	for(i=0;i<strlen(str);i++){
+		if(str[i] == '.')count++;
+	}
+	return ++count;
+};
+unsigned int GetNVal_FromOID_String(unsigned int n, const char* str){
+	char substr[6];
+	unsigned int res;
+	
+	unsigned int i = 0;
+	unsigned int j = 0;
+	unsigned int k = 0;
+	while(((str[i]!='.')||(j<n))&&(i<strlen(str))){
+		if(j == n-1){
+			if(str[i]!='.'){
+				substr[k]=str[i];
+			k++;}
+		}
+		if(str[i+1]=='.'){j++;};
+		i++;
+	}
+	substr[++k] = '\0';
+	sscanf(substr,"%u",&res);
+	return res;
+	
+}
+int CompareOIDS(const char* str1,const char* str2){
+	if(GetOIDCount(str1)>GetOIDCount(str2)){
+		for(int i = 1;i<GetOIDCount(str2)+1;i++){
+			if(GetNVal_FromOID_String(i,str1)>GetNVal_FromOID_String(i,str2))return 1;
+			if(GetNVal_FromOID_String(i,str1)<GetNVal_FromOID_String(i,str2))return -1;
+		}
+		return 1;
+	}
+	if(GetOIDCount(str1)<GetOIDCount(str2)){
+		for(int i = 1;i<GetOIDCount(str1)+1;i++){
+			if(GetNVal_FromOID_String(i,str1)>GetNVal_FromOID_String(i,str2))return 1;
+			if(GetNVal_FromOID_String(i,str1)<GetNVal_FromOID_String(i,str2))return -1;
+		}
+		return -1;
+	}
+	if(GetOIDCount(str1)==GetOIDCount(str2)){
+		for(int i = 1;i<GetOIDCount(str1)+1;i++){
+			if(GetNVal_FromOID_String(i,str1)>GetNVal_FromOID_String(i,str2))return 1;
+			if(GetNVal_FromOID_String(i,str1)<GetNVal_FromOID_String(i,str2))return -1;
+		}
+		return -1;
+	}
+
+}
+int GetNextOid(const char* str){
+	for(int i = 0;i<12;i++){
+		if(CompareOIDS(str, SNMP_VARS[i].oid)==-1){
+
+			return i;
+		}
+	}
+								
+	return -1;
+}
+
 SNMP_ERR_CODES Encode(void* C_value, uint8_t C_type, SNMP_VALUE *snmp_value, SNMP_SYNTAXES syn ){
 	SNMP_ERR_CODES status = 0;
 	if((syn == SNMP_SYNTAX_INT)&&(C_type == Word)){
@@ -1062,6 +1126,18 @@ void pduReceived()  // is being called when an SNMP packet has been received
 		/*else*/ if(SNMP_VARS_Processing( oid,  &pdu) == 1){
 
 		}
+		else if( pdu.type == SNMP_PDU_GET_NEXT ){
+			int a = GetNextOid(oid);				
+			if(a>=0){							
+					SNMP_OID_fromString(&(pdu.OID), SNMP_VARS[a].oid);
+					status = Encode(SNMP_VARS[a].variable, SNMP_VARS[a].variableType, &pdu.VALUE,SNMP_VARS[a].syn);
+					pdu.type = SNMP_PDU_RESPONSE;
+					pdu.error = status;
+					}else{
+						pdu.type = SNMP_PDU_RESPONSE;
+						pdu.error = SNMP_ERR_NO_SUCH_NAME;
+					}
+			}
 		#endif
 	
 		else
@@ -1104,7 +1180,7 @@ void pduReceived()  // is being called when an SNMP packet has been received
 	}
 
 	//
-	//  Serial.print("freeing PDU..");
+	// Serial.print("freeing PDU..");
 	// Serial.print(" RAM:");
 	// freeMemory() << endl;
 	// Agentuino.freePdu(&pdu);
