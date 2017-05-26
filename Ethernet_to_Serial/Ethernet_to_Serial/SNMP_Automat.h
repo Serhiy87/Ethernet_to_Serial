@@ -22,9 +22,14 @@ extern
 #define SNMP_MAX_NAME_LEN 20
 #define SNMP_MAX_VALUE_LEN      64  // 128 ??? should limit this
 #define SNMP_MAX_PACKET_LEN     SNMP_MAX_VALUE_LEN + SNMP_MAX_OID_LEN + 25  //???
+#define SNMP_MAX_VALUES_COUNT 10
 #define SNMP_FREE(s)   do { if (s) { free((void *)s); s=NULL; } } while(0)
 #define lowByte(w) ((uint8_t) ((w) & 0xff))
 #define highByte(w) ((uint8_t) ((w) >> 8))
+uint8_t NonRepeaters, MaxRepetition;
+uint16_t BulkValuesIndexes[SNMP_MAX_VALUES_COUNT];
+uint8_t BulkValuesCount;
+
  int32_t ledstate=0;
 
 typedef union  {
@@ -70,7 +75,8 @@ typedef enum {
 	SNMP_PDU_GET_NEXT = ASN_BER_BASE_CONTEXT | ASN_BER_BASE_CONSTRUCTOR | 1,
 	SNMP_PDU_RESPONSE = ASN_BER_BASE_CONTEXT | ASN_BER_BASE_CONSTRUCTOR | 2,
 	SNMP_PDU_SET    = ASN_BER_BASE_CONTEXT | ASN_BER_BASE_CONSTRUCTOR | 3,
-	SNMP_PDU_TRAP   = ASN_BER_BASE_CONTEXT | ASN_BER_BASE_CONSTRUCTOR | 4
+	SNMP_PDU_TRAP   = ASN_BER_BASE_CONTEXT | ASN_BER_BASE_CONSTRUCTOR | 4,
+	SNMP_PDU_GET_BULK   = ASN_BER_BASE_CONTEXT | ASN_BER_BASE_CONSTRUCTOR | 5
 }SNMP_PDU_TYPES ;
 
 
@@ -87,10 +93,10 @@ size_t _setSize;
 
 typedef enum  {
 	//   Trap generic types:
-	SNMP_TRAP_COLD_START        = 0,
-	SNMP_TRAP_WARM_START        = 1,
-	SNMP_TRAP_LINK_DOWN         = 2,
-	SNMP_TRAP_LINK_UP         = 3,
+	SNMP_TRAP_COLD_START          = 0,
+	SNMP_TRAP_WARM_START          = 1,
+	SNMP_TRAP_LINK_DOWN           = 2,
+	SNMP_TRAP_LINK_UP			  = 3,
 	SNMP_TRAP_AUTHENTICATION_FAIL = 4,
 	SNMP_TRAP_EGP_NEIGHBORLOSS    = 5,
 	SNMP_TRAP_ENTERPRISE_SPECIFIC = 6
@@ -206,23 +212,23 @@ typedef struct  {
 								if (fs_oidw < 128) {
 									oid->data[fs_id] = fs_oidw;
 									} else if (fs_oidw < 16384 ) {
-									byte fs_loidb = lowByte(fs_oidw) & 127;
-									uint16_t fs_oidwtmp = fs_oidw << 1;
-									byte fs_hoidb = highByte(fs_oidwtmp) | 128;
-									oid->data[fs_id] = fs_hoidb;
-									fs_id++;
-									oid->data[fs_id] = fs_loidb;
+										byte fs_loidb = lowByte(fs_oidw) & 127;
+										uint16_t fs_oidwtmp = fs_oidw << 1;
+										byte fs_hoidb = highByte(fs_oidwtmp) | 128;
+										oid->data[fs_id] = fs_hoidb;
+										fs_id++;
+										oid->data[fs_id] = fs_loidb;
 									} else {
-									byte fs_loidb = lowByte(fs_oidw) & 127;
-									uint16_t fs_oidwtmp = fs_oidw << 1;
-									byte fs_hoidb = highByte(fs_oidwtmp) | 128;
-									fs_oidwtmp = fs_oidw >> 14;
-									byte fs_hhoidb = (lowByte(fs_oidwtmp) & 3) | 128;
-									oid->data[fs_id] = fs_hhoidb;
-									fs_id++;
-									oid->data[fs_id] = fs_hoidb;
-									fs_id++;
-									oid->data[fs_id] = fs_loidb;
+										byte fs_loidb = lowByte(fs_oidw) & 127;
+										uint16_t fs_oidwtmp = fs_oidw << 1;
+										byte fs_hoidb = highByte(fs_oidwtmp) | 128;
+										fs_oidwtmp = fs_oidw >> 14;
+										byte fs_hhoidb = (lowByte(fs_oidwtmp) & 3) | 128;
+										oid->data[fs_id] = fs_hhoidb;
+										fs_id++;
+										oid->data[fs_id] = fs_hoidb;
+										fs_id++;
+										oid->data[fs_id] = fs_loidb;
 								}
 								memset(fs_Csl, 0, 5);
 								fs_ic = 0;
@@ -807,7 +813,7 @@ SNMP_API_STAT_CODES SNMP_requestPdu(SNMP_PDU *pdu)
 	byte ridLen, ridEnd;
 	byte errLen, errEnd;
 	byte eriLen, eriEnd;
-	byte vblTyp, vblLen;
+	byte vblTyp, vblLen, vblEnd;
 	byte vbiTyp, vbiLen;
 	byte obiLen, obiEnd;
 	byte valTyp, valLen, valEnd;
@@ -862,13 +868,46 @@ SNMP_API_STAT_CODES SNMP_requestPdu(SNMP_PDU *pdu)
 	eriEnd = errEnd + 2 + eriLen;
 	vblTyp = _packet[eriEnd + 1];
 	vblLen = _packet[eriEnd + 2];
-	vbiTyp = _packet[eriEnd + 3];
-	vbiLen = _packet[eriEnd + 4];
-	obiLen = _packet[eriEnd + 6];
-	obiEnd = eriEnd + obiLen + 6;
-	valTyp = _packet[obiEnd + 1];
-	valLen = _packet[obiEnd + 2];
-	valEnd = obiEnd + 2 + valLen;
+	vblEnd = eriEnd + 2;
+
+	pdu->type = (SNMP_PDU_TYPES)pduTyp;
+	if(pdu->type!=SNMP_PDU_GET_BULK){
+		vbiTyp = _packet[eriEnd + 3];
+		vbiLen = _packet[eriEnd + 4];
+		obiLen = _packet[eriEnd + 6];
+		obiEnd = eriEnd + obiLen + 6;
+		valTyp = _packet[obiEnd + 1];
+		valLen = _packet[obiEnd + 2];
+		valEnd = obiEnd + 2 + valLen;
+		}
+	else{
+		uint16_t SumLenOfVars = 0;
+		int i=0;
+		BulkValuesCount = 0;
+		while(SumLenOfVars<vblLen){
+			vbiLen = _packet[vblEnd + 2 + SumLenOfVars];
+								SumLenOfVars += 2 + vbiLen;
+
+			SNMP_OID oid;
+			oid.size = _packet[vblEnd + 4 + SumLenOfVars];
+			for(int i=0;i<oid.size;i++){
+				oid.data[i] = _packet[vblEnd + 5 + SumLenOfVars + i];		
+			}
+/*
+			char buf[16];
+			SNMP_OID_toString(oid, buf);
+			uint8_t a = GetNextOid(buf);
+			if(a>=0){
+				BulkValuesIndexes[BulkValuesCount++] = a;				
+			}*/
+
+		}
+		MB_HoldReg[0] = BulkValuesCount;
+		MB_HoldReg[1] = BulkValuesIndexes[0];
+		MB_HoldReg[2] = BulkValuesIndexes[1];
+		MB_HoldReg[3] = BulkValuesIndexes[2];
+
+	}
 	//
 	// extract version
 
