@@ -109,7 +109,7 @@ MB_M_Init(uint8_t MB_N)
 	MB_M_Timeout[MB_N]	= erb(&MB_M_Param_EE[MB_N].Timeout);
 	MB_M_Try[MB_N]			= erb(&MB_M_Param_EE[MB_N].Try);
 	MB_M_TimeOff[MB_N]	= erb(&MB_M_Param_EE[MB_N].TimeOff);
-	if(MB_M_Period[0] == 10)LED_On();
+
 	TD_MB = Timer16SysAlloc(Modbus_Qt*3);
 }
 

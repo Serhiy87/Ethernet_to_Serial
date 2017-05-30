@@ -197,7 +197,7 @@ typedef struct  {
 		}
 	};
 
-		void SNMP_OID_fromString(SNMP_OID *oid, const char *buffer) {
+void SNMP_OID_fromString(SNMP_OID *oid, const char *buffer) {
 					if (buffer[0] == '1' && buffer[1] == '.' && buffer[2] == '3' && buffer[3] == '.') {
 						memset(oid->data, 0, SNMP_MAX_OID_LEN);
 						oid->data[0] = 0x2B;
@@ -870,6 +870,12 @@ SNMP_API_STAT_CODES SNMP_requestPdu(SNMP_PDU *pdu)
 	vblLen = _packet[eriEnd + 2];
 	vblEnd = eriEnd + 2;
 
+		// extract reqiest-id 0x00 0x00 0x00 0x01 (4-byte int aka int32)
+		pdu->requestId = 0;
+		for ( i = 0; i < ridLen; i++ ) {
+			pdu->requestId = (pdu->requestId << 8) | _packet[comEnd + 5 + i];
+		}
+
 	pdu->type = (SNMP_PDU_TYPES)pduTyp;
 	if(pdu->type!=SNMP_PDU_GET_BULK){
 		vbiTyp = _packet[eriEnd + 3];
@@ -886,26 +892,20 @@ SNMP_API_STAT_CODES SNMP_requestPdu(SNMP_PDU *pdu)
 		BulkValuesCount = 0;
 		while(SumLenOfVars<vblLen){
 			vbiLen = _packet[vblEnd + 2 + SumLenOfVars];
-								SumLenOfVars += 2 + vbiLen;
 
 			SNMP_OID oid;
 			oid.size = _packet[vblEnd + 4 + SumLenOfVars];
 			for(int i=0;i<oid.size;i++){
 				oid.data[i] = _packet[vblEnd + 5 + SumLenOfVars + i];		
 			}
-/*
-			char buf[16];
-			SNMP_OID_toString(oid, buf);
-			uint8_t a = GetNextOid(buf);
+			char buf[30];
+			SNMP_OID_toString(oid, &buf[0]);
+			uint8_t a = GetNextOid(&buf[0]);
 			if(a>=0){
 				BulkValuesIndexes[BulkValuesCount++] = a;				
-			}*/
-
+			}
+			SumLenOfVars += 2 + vbiLen;
 		}
-		MB_HoldReg[0] = BulkValuesCount;
-		MB_HoldReg[1] = BulkValuesIndexes[0];
-		MB_HoldReg[2] = BulkValuesIndexes[1];
-		MB_HoldReg[3] = BulkValuesIndexes[2];
 
 	}
 	//
@@ -978,11 +978,7 @@ SNMP_API_STAT_CODES SNMP_requestPdu(SNMP_PDU *pdu)
 	}*/
 	//
 	//
-	// extract reqiest-id 0x00 0x00 0x00 0x01 (4-byte int aka int32)
-	pdu->requestId = 0;
-	for ( i = 0; i < ridLen; i++ ) {
-		pdu->requestId = (pdu->requestId << 8) | _packet[comEnd + 5 + i];
-	}
+
 	//
 	// extract error
 	pdu->error = SNMP_ERR_NO_ERROR;
@@ -1130,7 +1126,7 @@ SNMP_API_STAT_CODES SNMP_responsePdu(SNMP_PDU *pdu)
 		_packet[_packetPos++] = pdu->VALUE.data[i];
 	}
 	//
-	
+
 /*	Serial.print("Remote IP:");Serial.print(_remoteIP[0]);Serial.print(", ");  Serial.print(_remoteIP[1]);Serial.print(", ");  Serial.print(_remoteIP[2]);Serial.print(", ");  Serial.print(_remoteIP[3]);Serial.println(";");
 	Serial.print("Remote PORT:");Serial.print(_snmpUdpSocket_remotePort());*/
 	//LED_On();
@@ -1142,6 +1138,140 @@ SNMP_API_STAT_CODES SNMP_responsePdu(SNMP_PDU *pdu)
 	return SNMP_API_STAT_SUCCESS;
 }
 
+
+SNMP_API_STAT_CODES SNMP_responsePduGetBulk(SNMP_PDU *pdu)
+{
+		pdu->error = SNMP_ERR_NO_ERROR;
+		pdu->errorIndex = 0;
+	int32_u u;
+	uint16_t varssize;
+	byte i;
+	//
+	// Length of entire SNMP packet
+	_packetPos = 0;  // 23
+	_packetSize = 19 + sizeof(pdu->requestId) + sizeof((int32_t)pdu->error) + sizeof(pdu->errorIndex);
+	//		
+	for(uint8_t i=0;i<BulkValuesCount;i++){
+		SNMP_PDU pdu1;
+		Encode(SNMP_VARS[BulkValuesIndexes[i]].variable, SNMP_VARS[BulkValuesIndexes[i]].variableType, &(pdu1.VALUE), SNMP_VARS[BulkValuesIndexes[i]].syn);
+		SNMP_OID_fromString(&pdu1.OID, SNMP_VARS[BulkValuesIndexes[i]].oid);		
+		varssize += ((byte)(pdu1.OID.size) + (byte)(pdu1.VALUE.size) + 6);
+		//varssize += pdu->VALUE.size ;
+	}
+	_packetSize+=varssize;
+		
+	
+
+
+	memset(_packet, 0, SNMP_MAX_PACKET_LEN);
+	//
+	if ( _dstType == SNMP_PDU_SET ) {
+		_packetSize += _setSize;
+		} else {
+		_packetSize += _getSize;
+	}
+	//
+	_packet[_packetPos++] = (byte)SNMP_SYNTAX_SEQUENCE; // type  25+4+4+4+8+16+6-2
+	_packet[_packetPos++] = 0x82;
+	_packet[_packetPos++] = highByte(_packetSize - 4);
+	_packet[_packetPos++] = lowByte(_packetSize - 4);
+	//_packet[_packetPos++] = (byte)_packetSize - 2;    // length
+	
+	//
+	// SNMP version
+	_packet[_packetPos++] = (byte)SNMP_SYNTAX_INT;  // type
+	_packet[_packetPos++] = 0x01;     // length
+	_packet[_packetPos++] = 0x00;     // value
+	//
+	// SNMP community string
+	_packet[_packetPos++] = (byte)SNMP_SYNTAX_OCTETS; // type
+	if ( _dstType == SNMP_PDU_SET ) {
+		_packet[_packetPos++] = (byte)_setSize; // length
+		for ( i = 0; i < _setSize; i++ ) {
+			_packet[_packetPos++] = (byte)_setCommName[i];
+		}
+		} else {
+		_packet[_packetPos++] = (byte)_getSize; // length
+		for ( i = 0; i < _getSize; i++ ) {
+			_packet[_packetPos++] = (byte)_getCommName[i];
+		}
+	}
+	//
+	// SNMP PDU
+	pdu->type = SNMP_PDU_RESPONSE;
+	_packet[_packetPos++] = (byte)pdu->type;
+	_packet[_packetPos++] = (byte)( sizeof(pdu->requestId) + sizeof((int32_t)pdu->error) + sizeof(pdu->errorIndex) + varssize + 8 );
+	//
+	// Request ID (size always 4 e.g. 4-byte int)
+	_packet[_packetPos++] = (byte)SNMP_SYNTAX_INT;  // type
+	_packet[_packetPos++] = (byte)sizeof(pdu->requestId);
+	u.int32 = pdu->requestId;
+	_packet[_packetPos++] = u.data[3];
+	_packet[_packetPos++] = u.data[2];
+	_packet[_packetPos++] = u.data[1];
+	_packet[_packetPos++] = u.data[0];
+	//
+	// Error (size always 4 e.g. 4-byte int)
+	_packet[_packetPos++] = (byte)SNMP_SYNTAX_INT;  // type
+	_packet[_packetPos++] = (byte)sizeof((int32_t)pdu->error);
+	u.int32 = pdu->error;
+	_packet[_packetPos++] = u.data[3];
+	_packet[_packetPos++] = u.data[2];
+	_packet[_packetPos++] = u.data[1];
+	_packet[_packetPos++] = u.data[0];
+	//
+	// Error Index (size always 4 e.g. 4-byte int)
+	_packet[_packetPos++] = (byte)SNMP_SYNTAX_INT;  // type
+	_packet[_packetPos++] = (byte)sizeof(pdu->errorIndex);
+	u.int32 = pdu->errorIndex;
+	_packet[_packetPos++] = u.data[3];
+	_packet[_packetPos++] = u.data[2];
+	_packet[_packetPos++] = u.data[1];
+	_packet[_packetPos++] = u.data[0];
+	//
+	// Varbind List
+	_packet[_packetPos++] = (byte)SNMP_SYNTAX_SEQUENCE; // type
+	_packet[_packetPos++] = (byte)( varssize ); //4
+
+
+		for(uint8_t i=0;i<BulkValuesCount;i++){
+			//Encode(SNMP_VARS[BulkValuesIndexes[i]].variable, SNMP_VARS[BulkValuesIndexes[i]].variableType, &pdu->VALUE, SNMP_VARS[BulkValuesIndexes[i]].syn);
+			//SNMP_OID_fromString(&pdu->OID, SNMP_VARS[BulkValuesIndexes[i]].oid);
+
+			SNMP_PDU pdu1;
+			Encode(SNMP_VARS[BulkValuesIndexes[i]].variable, SNMP_VARS[BulkValuesIndexes[i]].variableType, &(pdu1.VALUE), SNMP_VARS[BulkValuesIndexes[i]].syn);
+			SNMP_OID_fromString(&pdu1.OID, SNMP_VARS[BulkValuesIndexes[i]].oid);
+		
+			//
+			// Varbind
+			_packet[_packetPos++] = (byte)SNMP_SYNTAX_SEQUENCE; // type
+			_packet[_packetPos++] = (byte)( pdu1.OID.size + pdu1.VALUE.size + 4 ); //2
+			//
+			// ObjectIdentifier
+			_packet[_packetPos++] = (byte)SNMP_SYNTAX_OID;  // type
+			_packet[_packetPos++] = (byte)(pdu1.OID.size);
+			for (int j = 0; j < pdu1.OID.size; j++ ) {
+				_packet[_packetPos++] = pdu1.OID.data[j];
+			}
+			//
+			// Value
+			_packet[_packetPos++] = (byte)pdu1.VALUE.syntax;  // type
+			_packet[_packetPos++] = (byte)(pdu1.VALUE.size);
+			for (int m = 0; m < pdu1.VALUE.size; m++ ) {
+				_packet[_packetPos++] = pdu1.VALUE.data[m];
+			}
+			//
+	}
+/*	Serial.print("Remote IP:");Serial.print(_remoteIP[0]);Serial.print(", ");  Serial.print(_remoteIP[1]);Serial.print(", ");  Serial.print(_remoteIP[2]);Serial.print(", ");  Serial.print(_remoteIP[3]);Serial.println(";");
+	Serial.print("Remote PORT:");Serial.print(_snmpUdpSocket_remotePort());*/
+	//LED_On();
+	_UDPtoSerialSocket_beginPacket(_remoteIP, _snmpUdpSocket_remotePort());
+	_UDPtoSerialSocket_write(_packet, _packetSize);
+	///  Udp.endPacket();
+	//  Udp.write(_packet, _packetSize, _dstIp, _dstPort);
+	//
+	return SNMP_API_STAT_SUCCESS;
+}
 
 void pduReceived()  // is being called when an SNMP packet has been received
 {
@@ -1162,7 +1292,7 @@ void pduReceived()  // is being called when an SNMP packet has been received
 		char tmpOIDfs[SNMP_MAX_OID_LEN];
 		SNMP_OID_toString(pdu.OID, oid);
 
-		#ifdef MODBUS
+
 		/*else*/ if(SNMP_VARS_Processing( oid,  &pdu) == 1){
 
 		}
@@ -1178,24 +1308,28 @@ void pduReceived()  // is being called when an SNMP packet has been received
 						pdu.error = SNMP_ERR_NO_SUCH_NAME;
 					}
 			}
-		#endif
 	
-		else
-		{
-			// oid does not exist
-			//
-			// response packet - object not found
-			//pdu.VALUE.encode(SNMP_SYNTAX_NULL);
-			pdu.type = SNMP_PDU_RESPONSE;
-			pdu.error = SNMP_ERR_NO_SUCH_NAME;
+			else
+			{
+				// oid does not exist
+				//
+				// response packet - object not found
+				//pdu.VALUE.encode(SNMP_SYNTAX_NULL);
+				pdu.type = SNMP_PDU_RESPONSE;
+				pdu.error = SNMP_ERR_NO_SUCH_NAME;
 
-		}
+			}
 		
 		//
-
 		
+
+
 		SNMP_responsePdu(&pdu);
+	
 		count++;
+	}else if(pdu.type == SNMP_PDU_GET_BULK){
+	LED_On();
+	SNMP_responsePduGetBulk(&pdu);
 	}
 	
 	else
