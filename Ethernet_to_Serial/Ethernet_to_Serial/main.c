@@ -5,11 +5,11 @@
  * Author : Admin
  */ 
 //#define LOGGING
-#define  MODBUS
+#define MODBUS
  #ifdef LOGGING
 	 //#define Ethernet_Automat_BEGIN_LOGGING
 	 //#define send_DHCP_MESSAGE_Automat_LOGGING
-	//#define DHCP_Automat_LOGGING
+	 //#define DHCP_Automat_LOGGING
 	 //#define UDP_DEBUG
 	 #define SNMP_Automat_LOGGING
 	 //#define Webserver_Automat_LOGGING
@@ -24,7 +24,7 @@
 #include <stdint.h>
 #include <util/delay.h>
 #include "W5100.h"
-
+typedef uint8_t  byte ;
 #define Timer8ApplManuNumber	040
 #define Timer16ApplManuNumber	060
 #define Timer32ApplManuNumber	020
@@ -47,8 +47,8 @@ uint16_t	MB_InReg[80];
 
 #define Modbus_Map_List {				\
 	{									\
-		MB_Coil,		32,			\
-		MB_Input,		32,			\
+		MB_Coil,		32,				\
+		MB_Input,		32,				\
 		MB_HoldReg,		58,				\
 		MB_InReg,		80				\
 	},									\
@@ -76,23 +76,39 @@ void MB_AppCycle(){
 //MB_HoldReg[1] =  Tfree2cond_var;
 };
 // ~~~~~~~~~~~~~~
+uint16_t MB_Input_Vars[8];
+uint16_t MB_Coil_Vars[8];
+void SNMP_TO_MODUS(){
+	for (uint8_t i = 0; i<8; i++){
+	if(MB_Coil_Vars[i]>0){
+			MB_Coil[0]|=1<<i;
+		}else{
+			MB_Coil[0]&=~(1<<i);
+		}
+	};
+};
+void MODUS_TO_SNMP(){
+	for (uint8_t i = 0; i<8; i++){
+			MB_Input_Vars[i] = ((MB_Input[0])&(1<<i))>0?1:0;
+		};
+};
 void
 USART_Cycle(void)
 {
+	SNMP_TO_MODUS();
 	MB_Cycle();
 	MB_AppCycle();
+	MODUS_TO_SNMP();
 }
 
 Modbus_ISR(0)
 
 Modbus_ISR(1)
 
-
-
-// MB_Query MYQUERRY[] = { {4, 0, 25, 0}, {16, 1, 4, 0} , {3, 1, 4, 0} };
- MB_Query MYQUERRY[] = { {4, 0, 25, 0}, {16, 1, 4, 0}  };
- MB_Slave MB_Slave_List[] = { {1, MYQUERRY, 2} };
- MB_Master MB_Master_List[] = { {MB_Slave_List, 1} };
+ MB_Query AI8AO4_QUERRY[] = { {4, 0, 25, 0}, {16, 1, 4, 0}  };
+ MB_Query DI8RO8_QUERRY[] = { {2, 0, 8, 0},  {15, 8, 8, 0}  };
+ MB_Slave MB_Slave_List[] = { {1, AI8AO4_QUERRY, 2}, {2, DI8RO8_QUERRY, 2} };
+ MB_Master MB_Master_List[] = { {MB_Slave_List, 2} };
 
 
 #endif
@@ -107,10 +123,10 @@ uint32_t myMillis(void){
 #include "Ethernet.h"
 
 void LED_Init(){
- LED_Timer = Timer16Alloc();
+	LED_Timer = Timer16Alloc();
 }
 void LED_On(){
-PORTG|=1<<PG3;
+	PORTG|=1<<PG3;
 }
 void LED_Off(){
 	PORTG&=~(1<<PG3);

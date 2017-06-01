@@ -13,7 +13,7 @@
 #include "avr/pgmspace.h"
 #include "UDP_Automat.h"
 #include "stdio.h"
-typedef uint8_t  byte ;
+
 byte count=0;
 extern
 #define SNMP_DEFAULT_PORT  161
@@ -104,16 +104,16 @@ typedef enum  {
 
 typedef enum{
 	SNMP_ERR_NO_ERROR         = 0,
-	SNMP_ERR_TOO_BIG        = 1,
-	SNMP_ERR_NO_SUCH_NAME       = 2,
+	SNMP_ERR_TOO_BIG		  = 1,
+	SNMP_ERR_NO_SUCH_NAME     = 2,
 	SNMP_ERR_BAD_VALUE        = 3,
 	SNMP_ERR_READ_ONLY        = 4,
 	SNMP_ERR_GEN_ERROR        = 5,
 
 	SNMP_ERR_NO_ACCESS        = 6,
-	SNMP_ERR_WRONG_TYPE         = 7,
-	SNMP_ERR_WRONG_LENGTH       = 8,
-	SNMP_ERR_WRONG_ENCODING     = 9,
+	SNMP_ERR_WRONG_TYPE       = 7,
+	SNMP_ERR_WRONG_LENGTH     = 8,
+	SNMP_ERR_WRONG_ENCODING   = 9,
 	SNMP_ERR_WRONG_VALUE      = 10,
 	SNMP_ERR_NO_CREATION      = 11,
 	SNMP_ERR_INCONSISTANT_VALUE     = 12,
@@ -671,27 +671,45 @@ typedef struct {
 }SNMP_FIELD;
 
 enum{READ, READWRITE};
+//uint16_t MB_Input_Vars[8];
+//uint16_t MB_Input_Vars[8];
 #ifdef MODBUS
 SNMP_FIELD SNMP_VARS[] = {
-	{"1.3.6.1.2.1.1.1.0",		 SNMP_SYNTAX_OCTETS,	locDescr,		Text,		READ},
-	{"1.3.6.1.2.1.1.2.0",		 SNMP_SYNTAX_OCTETS,	locObjectID,	Text,		READ},
-	{"1.3.6.1.2.1.1.3.0",		 SNMP_SYNTAX_TIME_TICKS,&locUpTime,		Long_Word,	READ},
-	{"1.3.6.1.2.1.1.4.0",		 SNMP_SYNTAX_OCTETS,	locContact,		Text,		READWRITE},
-	{"1.3.6.1.2.1.1.5.0",		 SNMP_SYNTAX_OCTETS,	locName,		Text,		READWRITE},
-	{"1.3.6.1.2.1.1.6.0",		 SNMP_SYNTAX_OCTETS,	locLocation,	Text,		READWRITE},
-	{"1.3.6.1.2.1.1.7.0",		 SNMP_SYNTAX_INT,		&locServices,	Long_Int,	READ},
-	{"1.3.6.1.4.1.2017.12.1.0",  SNMP_SYNTAX_INT32,		&MB_HoldReg[0], Word,		READWRITE},
-	{"1.3.6.1.4.1.2017.12.2.0",  SNMP_SYNTAX_INT32,		&MB_HoldReg[1], Word,		READWRITE},
-	{"1.3.6.1.4.1.2017.12.3.0",  SNMP_SYNTAX_INT32,		&MB_HoldReg[2], Word,		READWRITE},
-	{"1.3.6.1.4.1.2017.12.4.0",  SNMP_SYNTAX_INT32,		&MB_HoldReg[3], Word,		READWRITE},
-	{"1.3.6.1.4.1.2017.12.5.0",  SNMP_SYNTAX_INT32,		&MB_InReg[9],   Word,		READ},
-	{"1.3.6.1.4.1.2017.12.6.0",  SNMP_SYNTAX_INT32,		&MB_InReg[10],  Word,		READ},
-	{"1.3.6.1.4.1.2017.12.7.0",  SNMP_SYNTAX_INT32,		&MB_InReg[11],  Word,		READ},
-	{"1.3.6.1.4.1.2017.12.8.0",  SNMP_SYNTAX_INT32,		&MB_InReg[12],  Word,		READ},
-	{"1.3.6.1.4.1.2017.12.9.0",  SNMP_SYNTAX_INT32,		&MB_InReg[13],  Word,		READ},
-	{"1.3.6.1.4.1.2017.12.10.0", SNMP_SYNTAX_INT32,		&MB_InReg[14],  Word,		READ},
-	{"1.3.6.1.4.1.2017.12.11.0", SNMP_SYNTAX_INT32,		&MB_InReg[15],  Word,		READ},
-	{"1.3.6.1.4.1.2017.12.12.0", SNMP_SYNTAX_INT32,		&MB_InReg[16],  Word,		READ},
+	{"1.3.6.1.2.1.1.1.0",		 SNMP_SYNTAX_OCTETS,	locDescr,			Text,		READ},
+	{"1.3.6.1.2.1.1.2.0",		 SNMP_SYNTAX_OCTETS,	locObjectID,		Text,		READ},
+	{"1.3.6.1.2.1.1.3.0",		 SNMP_SYNTAX_TIME_TICKS,&locUpTime,			Long_Word,	READ},
+	{"1.3.6.1.2.1.1.4.0",		 SNMP_SYNTAX_OCTETS,	locContact,			Text,		READWRITE},
+	{"1.3.6.1.2.1.1.5.0",		 SNMP_SYNTAX_OCTETS,	locName,			Text,		READWRITE},
+	{"1.3.6.1.2.1.1.6.0",		 SNMP_SYNTAX_OCTETS,	locLocation,		Text,		READWRITE},
+	{"1.3.6.1.2.1.1.7.0",		 SNMP_SYNTAX_INT,		&locServices,		Long_Int,	READ},
+	{"1.3.6.1.4.1.2017.12.1.0",  SNMP_SYNTAX_INT32,		&MB_HoldReg[0],		Word,		READWRITE},
+	{"1.3.6.1.4.1.2017.12.2.0",  SNMP_SYNTAX_INT32,		&MB_HoldReg[1],		Word,		READWRITE},
+	{"1.3.6.1.4.1.2017.12.3.0",  SNMP_SYNTAX_INT32,		&MB_HoldReg[2],		Word,		READWRITE},
+	{"1.3.6.1.4.1.2017.12.4.0",  SNMP_SYNTAX_INT32,		&MB_HoldReg[3],		Word,		READWRITE},
+	{"1.3.6.1.4.1.2017.12.5.0",  SNMP_SYNTAX_INT32,		&MB_InReg[9],		Word,		READ},
+	{"1.3.6.1.4.1.2017.12.6.0",  SNMP_SYNTAX_INT32,		&MB_InReg[10],		Word,		READ},
+	{"1.3.6.1.4.1.2017.12.7.0",  SNMP_SYNTAX_INT32,		&MB_InReg[11],		Word,		READ},
+	{"1.3.6.1.4.1.2017.12.8.0",  SNMP_SYNTAX_INT32,		&MB_InReg[12],		Word,		READ},
+	{"1.3.6.1.4.1.2017.12.9.0",  SNMP_SYNTAX_INT32,		&MB_InReg[13],		Word,		READ},
+	{"1.3.6.1.4.1.2017.12.10.0", SNMP_SYNTAX_INT32,		&MB_InReg[14],		Word,		READ},
+	{"1.3.6.1.4.1.2017.12.11.0", SNMP_SYNTAX_INT32,		&MB_InReg[15],		Word,		READ},
+	{"1.3.6.1.4.1.2017.12.12.0", SNMP_SYNTAX_INT32,		&MB_InReg[16],		Word,		READ},
+	{"1.3.6.1.4.1.2017.13.1.0",  SNMP_SYNTAX_INT32,		&MB_Coil_Vars[0],   Word,		READWRITE},
+	{"1.3.6.1.4.1.2017.13.2.0",	 SNMP_SYNTAX_INT32,		&MB_Coil_Vars[1],   Word,		READWRITE},
+	{"1.3.6.1.4.1.2017.13.3.0",	 SNMP_SYNTAX_INT32,		&MB_Coil_Vars[2],   Word,		READWRITE},
+	{"1.3.6.1.4.1.2017.13.4.0",	 SNMP_SYNTAX_INT32,		&MB_Coil_Vars[3],   Word,		READWRITE},
+	{"1.3.6.1.4.1.2017.13.5.0",  SNMP_SYNTAX_INT32,		&MB_Coil_Vars[4],   Word,		READWRITE},
+	{"1.3.6.1.4.1.2017.13.6.0",  SNMP_SYNTAX_INT32,		&MB_Coil_Vars[5],   Word,		READWRITE},
+	{"1.3.6.1.4.1.2017.13.7.0",  SNMP_SYNTAX_INT32,		&MB_Coil_Vars[6],   Word,		READWRITE},
+	{"1.3.6.1.4.1.2017.13.8.0",  SNMP_SYNTAX_INT32,		&MB_Coil_Vars[7],   Word,		READWRITE},
+	{"1.3.6.1.4.1.2017.13.9.0",  SNMP_SYNTAX_INT32,		&MB_Input_Vars[0],  Word,		READ},
+	{"1.3.6.1.4.1.2017.13.10.0", SNMP_SYNTAX_INT32,		&MB_Input_Vars[1],  Word,		READ},
+	{"1.3.6.1.4.1.2017.13.11.0", SNMP_SYNTAX_INT32,		&MB_Input_Vars[2],  Word,		READ},
+	{"1.3.6.1.4.1.2017.13.12.0", SNMP_SYNTAX_INT32,		&MB_Input_Vars[3],  Word,		READ},
+	{"1.3.6.1.4.1.2017.13.13.0", SNMP_SYNTAX_INT32,		&MB_Input_Vars[4],  Word,		READ},
+	{"1.3.6.1.4.1.2017.13.14.0", SNMP_SYNTAX_INT32,		&MB_Input_Vars[5],  Word,		READ},
+	{"1.3.6.1.4.1.2017.13.15.0", SNMP_SYNTAX_INT32,		&MB_Input_Vars[6],  Word,		READ},
+	{"1.3.6.1.4.1.2017.13.16.0", SNMP_SYNTAX_INT32,		&MB_Input_Vars[7],  Word,		READ},
 };
 #endif
 unsigned int GetOIDCount(const char* str){
@@ -747,7 +765,7 @@ int CompareOIDS(const char* str1,const char* str2){
 
 }
 int GetNextOid(const char* str){
-	for(int i = 0;i<12;i++){
+	for(int i = 0;i<sizeof(SNMP_VARS)/sizeof(SNMP_FIELD);i++){
 		if(CompareOIDS(str, SNMP_VARS[i].oid)==-1){
 
 			return i;
@@ -1159,9 +1177,6 @@ SNMP_API_STAT_CODES SNMP_responsePduGetBulk(SNMP_PDU *pdu)
 		//varssize += pdu->VALUE.size ;
 	}
 	_packetSize+=varssize;
-		
-	
-
 
 	memset(_packet, 0, SNMP_MAX_PACKET_LEN);
 	//
@@ -1321,9 +1336,6 @@ void pduReceived()  // is being called when an SNMP packet has been received
 			}
 		
 		//
-		
-
-
 		SNMP_responsePdu(&pdu);
 	
 		count++;
@@ -1502,7 +1514,7 @@ uint8_t SNMP_VARS_Processing(char* oid, SNMP_PDU* pdu){
 					return 1;
 				}
 		}
-			return 0;
+		return 0;
 	}
 
 
