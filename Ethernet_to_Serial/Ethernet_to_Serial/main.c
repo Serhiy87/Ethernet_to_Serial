@@ -105,7 +105,7 @@ Modbus_ISR(0)
 
 Modbus_ISR(1)
 
- MB_Query AI8AO4_QUERRY[] = { {4, 0, 25, 0}, {16, 1, 4, 0}  };
+ MB_Query AI8AO4_QUERRY[] = { {4, 9, 8, 0}, {16, 1, 4, 0}  };
  MB_Query DI8RO8_QUERRY[] = { {2, 0, 8, 0},  {15, 8, 8, 0}  };
  MB_Slave MB_Slave_List[] = { {1, AI8AO4_QUERRY, 2}, {2, DI8RO8_QUERRY, 2} };
  MB_Master MB_Master_List[] = { {MB_Slave_List, 2} };
