@@ -767,7 +767,6 @@ int CompareOIDS(const char* str1,const char* str2){
 int GetNextOid(const char* str){
 	for(int i = 0;i<sizeof(SNMP_VARS)/sizeof(SNMP_FIELD);i++){
 		if(CompareOIDS(str, SNMP_VARS[i].oid)==-1){
-
 			return i;
 		}
 	}

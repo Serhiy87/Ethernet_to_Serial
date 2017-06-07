@@ -79,7 +79,7 @@ int cC=0,ii=0,nn=0,nc=0;
 
 
 uint16_t Webserver_recv_size(void)
-{//while(((W5100read(WebserverSocket_RX_RSR) & 0x00FF) << 8 ) + W5100read(WebserverSocket_RX_RSR + 1)!=((W5100read(WebserverSocket_RX_RSR) & 0x00FF) << 8 ) + W5100read(WebserverSocket_RX_RSR + 1)){};
+{
 	return ((W5100read(WebserverSocket_RX_RSR) & 0x00FF) << 8 ) + W5100read(WebserverSocket_RX_RSR + 1);
 }
 void WebserverSocket_close()
@@ -292,11 +292,7 @@ void ModbusTCPRun(uint8_t FC)
   //****************** Read Coils **********************
   if(FC == MB_FC_READ_COILS)
   {
-
     Start = word(buf[8],buf[9]);
-
-
-
     CoilDataLength = word(buf[10],buf[11]);
     ByteDataLength = CoilDataLength / 8;
     if(ByteDataLength * 8 < CoilDataLength) ByteDataLength++;      
@@ -314,8 +310,9 @@ void ModbusTCPRun(uint8_t FC)
       for(int j = 0; j < 8; j++)
       {
         //bitWrite(buf[9 + i], j, C[Start + i * 8 + j]);
+		#ifdef MODBUS
 		bitWrite(buf[9 + i], j, MB_Coil_Vars[Start + i * 8 + j]);
-
+		#endif
       }
     }
     MessageLength = ByteDataLength + 9;
@@ -328,9 +325,7 @@ void ModbusTCPRun(uint8_t FC)
   //****************** Read Discrete Inputs **********************
   if(FC == MB_FC_READ_DISCRETE_INPUTS)
   {
-
     Start = word(buf[8],buf[9]);
-
     CoilDataLength = word(buf[10],buf[11]);
     ByteDataLength = CoilDataLength / 8;
     if(ByteDataLength * 8 < CoilDataLength) ByteDataLength++;      
@@ -347,16 +342,13 @@ void ModbusTCPRun(uint8_t FC)
     {
       for(int j = 0; j < 8; j++)
       {
-        //bitWrite(buf[9 + i], j, C[Start + i * 8 + j]);
-		//bitWrite(buf[9 + i], j, MB_Coil_Vars[Start + i * 8 + j]);
+		#ifdef MODBUS
 		bitWrite(buf[9 + i], j, MB_Input_Vars[Start + i * 8 + j]);
-		
+		#endif
       }
     }
     MessageLength = ByteDataLength + 9;
 	Webserver_send(buf,MessageLength);
- //   client.write(ByteArray, MessageLength);
-//    Writes = 1 + Writes * (Writes < 999);
     FC = MB_FC_NONE;
   }
   //****************** Read Registers ******************
@@ -385,7 +377,6 @@ void ModbusTCPRun(uint8_t FC)
     }
     MessageLength = ByteDataLength + 9;
     Webserver_send(buf, MessageLength);
-    //Writes = 1 + Writes * (Writes < 999);
     FC = MB_FC_NONE;
   }
 
@@ -393,7 +384,6 @@ void ModbusTCPRun(uint8_t FC)
     {
 	    Start = word(buf[8],buf[9]);
 	    WordDataLength = word(buf[10],buf[11]);
-	    //WordDataLength = 11;
 	    ByteDataLength = WordDataLength * 2;
 	    #ifdef Modbus_TCP_Automat_LOGGING
 			SerialPrint(" MB_FC_READ_REGISTERS S=");
@@ -426,7 +416,9 @@ void ModbusTCPRun(uint8_t FC)
   {
     Start = word(buf[8],buf[9]);
   //  C[Start] = word(buf[10],buf[11]) > 0;
+	#ifdef MODBUS
 	MB_Coil_Vars[Start] = word(buf[10],buf[11]) > 0;
+	#endif
     #ifdef MbDebug
       SerialPrint(" MB_FC_WRITE_COIL C");
       SerialPrintUint16_t(Start);
@@ -434,8 +426,8 @@ void ModbusTCPRun(uint8_t FC)
       SerialPrintUint16_t(C[Start]);
 	  SerialPrintEndl();
     #endif
-    buf[5] = 2; //Number of bytes after this one.
-    MessageLength = 8;
+    buf[5] = 6; //Number of bytes after this one.
+    MessageLength = 12;
 	Webserver_send(buf,MessageLength);
     //client.write(ByteArray, MessageLength);
     //Writes = 1 + Writes * (Writes < 999);
@@ -492,7 +484,9 @@ void ModbusTCPRun(uint8_t FC)
       {
        // C[Start + i * 8 + j] = bitRead( buf[13 + i], j);
 	   if(((i*8)+j)<allCoils){
+			#ifdef MODBUS
 			MB_Coil_Vars[Start + i * 8 + j] = bitRead( buf[13 + i], j); 
+			#endif
 		} 
       }
     }
@@ -606,7 +600,7 @@ uint8_t Modbus_TCP_Automat(uint8_t event)
 				if(clo==0){
 					state=5;
 					//Timer=millis();
-					StartTimer16(Timer,2);
+					StartTimer16(Timer,1);
 					}
 				else{
 					state=6;
@@ -653,7 +647,7 @@ uint8_t Modbus_TCP_Automat(uint8_t event)
 			
 		case 5:
 			if(Timer16Stopp(Timer)){
-				StartTimer16(Timer,5);
+				StartTimer16(Timer,1);
 				state=6;
 			};
 			break;
@@ -700,8 +694,8 @@ uint8_t Modbus_TCP_Automat(uint8_t event)
 					SerialPrintUint8_t(buf[7]);
 					SerialPrintEndl();
 					for(int i = 0; i<rsize; i++){
-					SerialPrintUint8_t(buf[i]);
-					SerialPrint(",");
+						SerialPrintUint8_t(buf[i]);
+						SerialPrint(",");
 					}
 					SerialPrintEndl();
 				#endif
@@ -719,7 +713,7 @@ uint8_t Modbus_TCP_Automat(uint8_t event)
 				if (strindex((char *)buf,"GET /favicon.ico") >= 0) {state=10;}
 				if (strindex((char *)buf,"GET /t.htm") >= 0) {state=12;}
 				*/
-				StartTimer16(Timer,2);
+				//StartTimer16(Timer,1);
 				//_delay_ms(20);
 				//	WebserverSocket_disconnect();
 				state = 1;
@@ -780,9 +774,5 @@ uint8_t Modbus_TCP_Automat(uint8_t event)
 			#endif
 			return state;
 		}
-
-
-
-
 
 #endif /* MODBUS_TCP_AUTOMAT_H_ */

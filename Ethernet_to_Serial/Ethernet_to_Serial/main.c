@@ -9,9 +9,9 @@
  #ifdef LOGGING
 	 //#define Ethernet_Automat_BEGIN_LOGGING
 	 //#define send_DHCP_MESSAGE_Automat_LOGGING
-	 //#define DHCP_Automat_LOGGING
+	 #define DHCP_Automat_LOGGING
 	 //#define UDP_DEBUG
-	 #define SNMP_Automat_LOGGING
+	 //#define SNMP_Automat_LOGGING
 	 //#define Webserver_Automat_LOGGING
 	 //#define Modbus_TCP_Automat_LOGGING
 #endif
@@ -187,7 +187,7 @@ int main(void)
 	Ethernet_Automat(0);
     while (1) 
     {
-		_delay_ms(100);
+		//_delay_ms(100);
 		sysCycle();
 		LED_Cycle();
 		Ethernet_Automat(1);

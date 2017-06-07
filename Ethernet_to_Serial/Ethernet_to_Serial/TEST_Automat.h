@@ -156,7 +156,7 @@ uint8_t TEST_Automat(uint8_t event)
 			pi4[0] = locUpTime*10;
 			//pi4[1] = DHCP_Leased_count;
 			//pi4[2] = resetDHCP_Counter;
-			//pi4[3] = _dhcpLeaseTime;
+			pi4[3] = _dhcpLeaseTime;
 			GPRS_DATA[61] = 26;
 			Socket2_sendmessage_Automat(0, FreeCoolListenerIP, FreeCoolPort, GPRS_DATA, sizeof(GPRS_DATA));
 			break;

@@ -456,6 +456,7 @@ uint8_t parseDHCPResponse(unsigned long responseTimeout, uint32_t* transactionId
                     _dhcpUdpSocket_read((uint8_t*)&_dhcpLeaseTime, sizeof(_dhcpLeaseTime));
                     _dhcpLeaseTime = ntohl(_dhcpLeaseTime);
                     _renewInSec = _dhcpLeaseTime;
+					LED_On();
                     break;
 
                 default :
@@ -603,7 +604,7 @@ uint8_t DHCP_automat(uint8_t event)
 			  SerialPrintln(";");
 			  #endif
               //TimeLeasedStart=millis();
-			  StartTimer32(TD_DHCP_lease_timer, 3000);
+			  StartTimer32(TD_DHCP_lease_timer, _dhcpLeaseTime*100);
               state=255;
               break;         
            }
