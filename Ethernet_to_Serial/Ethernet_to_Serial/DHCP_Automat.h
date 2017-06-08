@@ -382,7 +382,7 @@ uint8_t parseDHCPResponse(unsigned long responseTimeout, uint32_t* transactionId
         {
             _dhcpUdpSocket_read(); // we don't care about the returned byte
         }
-
+		//MB_HoldReg[0]=
         while (_dhcpUdpSocket_available() > 0) 
         {
             switch (_dhcpUdpSocket_read()) 
@@ -400,12 +400,12 @@ uint8_t parseDHCPResponse(unsigned long responseTimeout, uint32_t* transactionId
                 
                 case subnetMask1 :
                     opt_len = _dhcpUdpSocket_read();
-                    _dhcpUdpSocket_read(_dhcpSubnetMask, 4);
+                    _dhcpUdpSocket_readBlock(_dhcpSubnetMask, 4);
                     break;
                 
                 case routersOnSubnet :
                     opt_len = _dhcpUdpSocket_read();
-                    _dhcpUdpSocket_read(_dhcpGatewayIp, 4);
+                    _dhcpUdpSocket_readBlock(_dhcpGatewayIp, 4);
                     for (int i = 0; i < opt_len-4; i++)
                     {
                         _dhcpUdpSocket_read();
@@ -414,7 +414,7 @@ uint8_t parseDHCPResponse(unsigned long responseTimeout, uint32_t* transactionId
                 
                 case dns :
                     opt_len = _dhcpUdpSocket_read();
-                    _dhcpUdpSocket_read(_dhcpDnsServerIp, 4);
+                    _dhcpUdpSocket_readBlock(_dhcpDnsServerIp, 4);
                     for (int i = 0; i < opt_len-4; i++)
                     {
                         _dhcpUdpSocket_read();
@@ -427,7 +427,7 @@ uint8_t parseDHCPResponse(unsigned long responseTimeout, uint32_t* transactionId
                          _dhcpDhcpServerIp[2] == 0 && _dhcpDhcpServerIp[3] == 0) ||
                         (*((uint32_t*)_dhcpDhcpServerIp)) == (*((uint32_t*)_remotePort)))
                     {
-                        _dhcpUdpSocket_read(_dhcpDhcpServerIp, sizeof(_dhcpDhcpServerIp));
+                        _dhcpUdpSocket_readBlock(_dhcpDhcpServerIp, sizeof(_dhcpDhcpServerIp));
                     }
                     else
                     {
@@ -441,26 +441,28 @@ uint8_t parseDHCPResponse(unsigned long responseTimeout, uint32_t* transactionId
 
                 case dhcpT1value : 
                     opt_len = _dhcpUdpSocket_read();
-                    _dhcpUdpSocket_read((uint8_t*)&_dhcpT1, sizeof(_dhcpT1));
+                    _dhcpUdpSocket_readBlock((uint8_t*)&_dhcpT1, sizeof(_dhcpT1));
                     _dhcpT1 = ntohl(_dhcpT1);
                     break;
 
                 case dhcpT2value : 
                     opt_len = _dhcpUdpSocket_read();
-                    _dhcpUdpSocket_read((uint8_t*)&_dhcpT2, sizeof(_dhcpT2));
+                    _dhcpUdpSocket_readBlock((uint8_t*)&_dhcpT2, sizeof(_dhcpT2));
                     _dhcpT2 = ntohl(_dhcpT2);
                     break;
 
                 case dhcpIPaddrLeaseTime :
+				LED_On();
                     opt_len = _dhcpUdpSocket_read();
-                    _dhcpUdpSocket_read((uint8_t*)&_dhcpLeaseTime, sizeof(_dhcpLeaseTime));
+                    _dhcpUdpSocket_readBlock((uint8_t*)&_dhcpLeaseTime, sizeof(_dhcpLeaseTime));
                     _dhcpLeaseTime = ntohl(_dhcpLeaseTime);
                     _renewInSec = _dhcpLeaseTime;
-					LED_On();
+					
                     break;
 
                 default :
                     opt_len = _dhcpUdpSocket_read();
+
                     // Skip over the rest of this option
                     while (opt_len--)
                     {
@@ -547,13 +549,19 @@ uint8_t DHCP_automat(uint8_t event)
         {
              break;
         }
-        _dhcp_state=DHCP_DISCOVER;   
-		StartTimer32(TD_DHCP_response_timer, 1000);
-        state=5;
+         _dhcp_state=DHCP_DISCOVER;   
+		 StartTimer32(TD_DHCP_response_timer, 1000);
+         state=5;
      	 break;
       
       case 4: 
-
+	           if(send_DHCP_MESSAGE_Automat(1, DHCP_REQUEST, 10)!=255)
+	           {
+		           break;
+	           }
+			   _dhcp_state=DHCP_DISCOVER;
+		 StartTimer32(TD_DHCP_response_timer, 1000);
+				 state=7;
      		 break;
 
       case 5:
@@ -602,9 +610,18 @@ uint8_t DHCP_automat(uint8_t event)
 			  SerialPrint(",");
 			  SerialPrintUint8_t(_dhcpLocalIp[3]);
 			  SerialPrintln(";");
+			  SerialPrint("Subnet mask:");
+			  SerialPrintUint8_t(_dhcpSubnetMask[0]);
+			  SerialPrint(",");
+			  SerialPrintUint8_t(_dhcpSubnetMask[1]);
+			  SerialPrint(",");
+			  SerialPrintUint8_t(_dhcpSubnetMask[2]);
+			  SerialPrint(",");
+			  SerialPrintUint8_t(_dhcpSubnetMask[3]);
+			  SerialPrintln(";");
 			  #endif
               //TimeLeasedStart=millis();
-			  StartTimer32(TD_DHCP_lease_timer, _dhcpLeaseTime*100);
+			  StartTimer32(TD_DHCP_lease_timer, _renewInSec*100);
               state=255;
               break;         
            }
@@ -627,7 +644,7 @@ uint8_t DHCP_automat(uint8_t event)
 
 	    case 255:
 				if(Timer32Stopp(TD_DHCP_lease_timer)){
-	                  state=6;
+	                  state=4;
 	               }
 			break;
      }
@@ -640,19 +657,24 @@ uint8_t DHCP_automat(uint8_t event)
             case 1:
 				_dhcpTransactionId = random2(1UL, 2000UL);
 				_dhcpInitialTransactionId = _dhcpTransactionId;
-				 memset(_dhcpLocalIp, 0, 4);
-				 memset(_dhcpSubnetMask, 0, 4);
-				 memset(_dhcpGatewayIp, 0, 4);
-				 memset(_dhcpDhcpServerIp, 0, 4);
-				 memset(_dhcpDnsServerIp, 0, 4);
+				memset(_dhcpLocalIp, 0, 4);
+				memset(_dhcpSubnetMask, 0, 4);
+				memset(_dhcpGatewayIp, 0, 4);
+				memset(_dhcpDhcpServerIp, 0, 4);
+				memset(_dhcpDnsServerIp, 0, 4);
                 UDPbegin0_Automat(0, DHCP_PORT); 
                 break;
+            case 4:
+               send_DHCP_MESSAGE_Automat(0, DHCP_REQUEST, 10);
+            break;
                 
             case 3:
                send_DHCP_MESSAGE_Automat(0, 1, 10);
                break;
             
             case 6:
+			   _dhcpTransactionId = random2(1UL, 2000UL);
+			   _dhcpInitialTransactionId = _dhcpTransactionId;
                send_DHCP_MESSAGE_Automat(0, DHCP_REQUEST, 10);
                break;
 

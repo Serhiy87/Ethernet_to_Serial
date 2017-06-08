@@ -8,7 +8,7 @@
 #define MODBUS
  #ifdef LOGGING
 	 //#define Ethernet_Automat_BEGIN_LOGGING
-	 //#define send_DHCP_MESSAGE_Automat_LOGGING
+	 #define send_DHCP_MESSAGE_Automat_LOGGING
 	 #define DHCP_Automat_LOGGING
 	 //#define UDP_DEBUG
 	 //#define SNMP_Automat_LOGGING

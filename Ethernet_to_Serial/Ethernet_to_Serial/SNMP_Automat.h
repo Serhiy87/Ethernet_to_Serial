@@ -765,11 +765,13 @@ int CompareOIDS(const char* str1,const char* str2){
 
 }
 int GetNextOid(const char* str){
+	#ifdef MODBUS
 	for(int i = 0;i<sizeof(SNMP_VARS)/sizeof(SNMP_FIELD);i++){
 		if(CompareOIDS(str, SNMP_VARS[i].oid)==-1){
 			return i;
 		}
 	}
+	#endif
 								
 	return -1;
 }
@@ -1169,11 +1171,13 @@ SNMP_API_STAT_CODES SNMP_responsePduGetBulk(SNMP_PDU *pdu)
 	_packetSize = 19 + sizeof(pdu->requestId) + sizeof((int32_t)pdu->error) + sizeof(pdu->errorIndex);
 	//		
 	for(uint8_t i=0;i<BulkValuesCount;i++){
+	#ifdef MODBUS
 		SNMP_PDU pdu1;
 		Encode(SNMP_VARS[BulkValuesIndexes[i]].variable, SNMP_VARS[BulkValuesIndexes[i]].variableType, &(pdu1.VALUE), SNMP_VARS[BulkValuesIndexes[i]].syn);
 		SNMP_OID_fromString(&pdu1.OID, SNMP_VARS[BulkValuesIndexes[i]].oid);		
 		varssize += ((byte)(pdu1.OID.size) + (byte)(pdu1.VALUE.size) + 6);
 		//varssize += pdu->VALUE.size ;
+		#endif
 	}
 	_packetSize+=varssize;
 
@@ -1253,9 +1257,11 @@ SNMP_API_STAT_CODES SNMP_responsePduGetBulk(SNMP_PDU *pdu)
 			//SNMP_OID_fromString(&pdu->OID, SNMP_VARS[BulkValuesIndexes[i]].oid);
 
 			SNMP_PDU pdu1;
+			#ifdef MODBUS
 			Encode(SNMP_VARS[BulkValuesIndexes[i]].variable, SNMP_VARS[BulkValuesIndexes[i]].variableType, &(pdu1.VALUE), SNMP_VARS[BulkValuesIndexes[i]].syn);
+
 			SNMP_OID_fromString(&pdu1.OID, SNMP_VARS[BulkValuesIndexes[i]].oid);
-		
+					#endif
 			//
 			// Varbind
 			_packet[_packetPos++] = (byte)SNMP_SYNTAX_SEQUENCE; // type
@@ -1306,17 +1312,25 @@ void pduReceived()  // is being called when an SNMP packet has been received
 		char tmpOIDfs[SNMP_MAX_OID_LEN];
 		SNMP_OID_toString(pdu.OID, oid);
 
-
+		#ifdef MODBUS
+		
 		/*else*/ if(SNMP_VARS_Processing( oid,  &pdu) == 1){
 
 		}
-		else if( pdu.type == SNMP_PDU_GET_NEXT ){
+		else 
+		#endif
+		 if( pdu.type == SNMP_PDU_GET_NEXT ){
 			int a = GetNextOid(oid);				
-			if(a>=0){							
+			if(a>=0){	
+					#ifdef MODBUS
+					
 					SNMP_OID_fromString(&(pdu.OID), SNMP_VARS[a].oid);
 					status = Encode(SNMP_VARS[a].variable, SNMP_VARS[a].variableType, &pdu.VALUE,SNMP_VARS[a].syn);
+						#endif
 					pdu.type = SNMP_PDU_RESPONSE;
 					pdu.error = status;
+
+
 					}else{
 						pdu.type = SNMP_PDU_RESPONSE;
 						pdu.error = SNMP_ERR_NO_SUCH_NAME;
