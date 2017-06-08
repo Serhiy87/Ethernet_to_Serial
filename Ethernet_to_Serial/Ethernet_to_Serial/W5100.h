@@ -14,7 +14,7 @@
  #include <util/delay.h>
  #define SPI_PORT PORTB
  #define SPI_DDR DDRB
- #define SCK_PIN	 1
+ #define SCK_PIN	1
  #define SS_PIN   0
  #define MOSI_PIN 2
  #define MISO_PIN 3

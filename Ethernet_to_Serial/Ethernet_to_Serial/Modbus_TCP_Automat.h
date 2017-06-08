@@ -351,7 +351,7 @@ void ModbusTCPRun(uint8_t FC)
 	Webserver_send(buf,MessageLength);
     FC = MB_FC_NONE;
   }
-  //****************** Read Registers ******************
+  //****************** Read Holding Registers ******************
   if(FC == MB_FC_READ_REGISTERS)
   {
     Start = word(buf[8],buf[9]);
@@ -365,13 +365,14 @@ void ModbusTCPRun(uint8_t FC)
       SerialPrintUint16_t(WordDataLength);
 	  SerialPrintEndl();
     #endif
-	#ifdef MODBUS 
-	R[Start] = MB_HoldReg[Start];
-	#endif
+
     buf[5] = ByteDataLength + 3; //Number of bytes after this one.
     buf[8] = ByteDataLength;     //Number of bytes after this one (or number of bytes of data).
     for(int i = 0; i < WordDataLength; i++)
     {
+	  #ifdef MODBUS
+		R[Start + i] = MB_HoldReg[Start + i];
+	  #endif
       buf[ 9 + i * 2] = highByte(R[Start + i]);
       buf[10 + i * 2] =  lowByte(R[Start + i]);
     }
@@ -380,6 +381,7 @@ void ModbusTCPRun(uint8_t FC)
     FC = MB_FC_NONE;
   }
 
+//****************** Read Input Registers ******************
     if(FC == MB_FC_READ_INPUT_REGISTERS)
     {
 	    Start = word(buf[8],buf[9]);
@@ -434,7 +436,7 @@ void ModbusTCPRun(uint8_t FC)
     FC = MB_FC_NONE;
   }
 
-  //****************** Write Register ******************
+  //****************** Write Holding Register ******************
   if(FC == MB_FC_WRITE_REGISTER)
   {
     Start = word(buf[8],buf[9]);
@@ -459,15 +461,12 @@ void ModbusTCPRun(uint8_t FC)
   //****************** Write Multiple Coils **********************
   //Function codes 15 & 16 by Martin Pettersson http://siamect.com
   if(FC == MB_FC_WRITE_MULTIPLE_COILS)
-  {  uint8_t head = 0;
-	  uint8_t tail = 0;
+  {  
 	   uint16_t allCoils = 0;
     Start = word(buf[8],buf[9]);
     CoilDataLength = word(buf[10],buf[11]);
 	allCoils = CoilDataLength;
-		if((Start%8)!=0){
-			tail = 8 - (Start%8);
-		}
+
     ByteDataLength = CoilDataLength / 8;
     if(ByteDataLength * 8 < CoilDataLength) ByteDataLength++;
     CoilDataLength = ByteDataLength * 8;

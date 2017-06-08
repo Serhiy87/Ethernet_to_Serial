@@ -18,7 +18,7 @@ uint8_t FreeCoolListenerIP[]={194,176,97,118};
 uint16_t FreeCoolPort = 2026;
 uint8_t GPRS_DATA[62];
 uint16_t Vega_SN=50004;
-extern int32_t Tfree2cond_var=204, Tair_var=106, Troom_var=222, Tcond_var=200;
+//extern int32_t Tfree2cond_var=204, Tair_var=106, Troom_var=222, Tcond_var=200;
 int16_t *ptr;
 int32_t* pi4;
 extern uint8_t  _dhcpLocalIp[4];
@@ -33,8 +33,7 @@ uint8_t TEST_Automat(uint8_t event)
 	static uint8_t state=0;
 	uint8_t stateOld=state;
 	static uint8_t Timer = 0;
-	uint16_t numBytes=0;
-	uint8_t messageType = 0;
+	
 	#ifdef TEST_Automat_LOGGING
 		Serial.print("  TEST_automat_Start_state:") ;
 		Serial.println(state) ;
@@ -147,8 +146,8 @@ uint8_t TEST_Automat(uint8_t event)
 			ptr = (int16_t*)&GPRS_DATA[27];
 			ptr[2] =0;
 			ptr[3] =0;
-			ptr[4] = Tcond_var;
-			ptr[5] = Tfree2cond_var;
+			ptr[4] = 0;
+			ptr[5] = 0;
 			ptr[6] = 123;
 			ptr[7] = 1800;
 			ptr[8] = 2200;

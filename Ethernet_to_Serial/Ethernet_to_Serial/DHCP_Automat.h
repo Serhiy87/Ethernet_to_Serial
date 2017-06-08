@@ -10,7 +10,7 @@
 #define DHCP_PORT 68
 #define DHCP_FLAGSBROADCAST  0x8000
 
-#define  DHCP_SERVER_PORT  67  /* from server to client */
+#define DHCP_SERVER_PORT  67  /* from server to client */
 #define DHCP_CLIENT_PORT  68  /* from client to server */
 /* DHCP message OP code */
 #define DHCP_BOOTREQUEST  1
@@ -27,8 +27,8 @@
 #define MAGIC_COOKIE    0x63825363
 
 /* DHCP message type */
-#define  DHCP_DISCOVER   1
-#define DHCP_OFFER        2
+#define DHCP_DISCOVER   1
+#define DHCP_OFFER      2
 #define DHCP_REQUEST    3
 #define DHCP_DECLINE    4
 #define DHCP_ACK        5
@@ -331,11 +331,11 @@ uint8_t send_DHCP_MESSAGE_Automat(uint8_t event, uint8_t messageType, uint16_t s
             break;
           }
       } 
-          #ifdef send_DHCP_MESSAGE_Automat_LOGGING
+     #ifdef send_DHCP_MESSAGE_Automat_LOGGING
         SerialPrint("send_DHCP_MESSAGE_Automat End_state:") ;
         SerialPrintUint8_t(state) ;
 		SerialPrintEndl();
-    #endif
+     #endif
       return state;
   }
     
@@ -452,7 +452,7 @@ uint8_t parseDHCPResponse(unsigned long responseTimeout, uint32_t* transactionId
                     break;
 
                 case dhcpIPaddrLeaseTime :
-				LED_On();
+				
                     opt_len = _dhcpUdpSocket_read();
                     _dhcpUdpSocket_readBlock((uint8_t*)&_dhcpLeaseTime, sizeof(_dhcpLeaseTime));
                     _dhcpLeaseTime = ntohl(_dhcpLeaseTime);

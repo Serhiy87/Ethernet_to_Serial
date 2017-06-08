@@ -73,7 +73,7 @@ USART_Init(void)
 }
 extern int32_t Tfree2cond_var;
 void MB_AppCycle(){
-//MB_HoldReg[1] =  Tfree2cond_var;
+
 };
 // ~~~~~~~~~~~~~~
 uint16_t MB_Input_Vars[8];

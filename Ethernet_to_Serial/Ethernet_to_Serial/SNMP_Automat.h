@@ -628,7 +628,7 @@ uint16_t destination_port=50000;
 
 static char locDescr[]              = "ELAS FREECOOLING";  // read-only (static)
 static char locObjectID[]           = "1.3.6.1.3.2009.0";                       // read-only (static)
-extern uint32_t locUpTime           = 0;                                        // read-only (static)
+uint32_t locUpTime           = 0;                                        // read-only (static)
 static char locContact[20]          = "www.elas.com.ua";                            // should be stored/read from EEPROM - read/write (not done for simplicity)
 static char locName[20]             = "ELAS OFFICE";                              // should be stored/read from EEPROM - read/write (not done for simplicity)
 static char locLocation[20]         = "Fastiv, UKR";                        // should be stored/read from EEPROM - read/write (not done for simplicity)
@@ -671,8 +671,7 @@ typedef struct {
 }SNMP_FIELD;
 
 enum{READ, READWRITE};
-//uint16_t MB_Input_Vars[8];
-//uint16_t MB_Input_Vars[8];
+
 #ifdef MODBUS
 SNMP_FIELD SNMP_VARS[] = {
 	{"1.3.6.1.2.1.1.1.0",		 SNMP_SYNTAX_OCTETS,	locDescr,			Text,		READ},
@@ -762,7 +761,7 @@ int CompareOIDS(const char* str1,const char* str2){
 		}
 		return -1;
 	}
-
+	return -1;
 }
 int GetNextOid(const char* str){
 	#ifdef MODBUS
@@ -794,12 +793,13 @@ SNMP_ERR_CODES Encode(void* C_value, uint8_t C_type, SNMP_VALUE *snmp_value, SNM
 		status = encodeInt32ToInt32(snmp_value, SNMP_SYNTAX_INT32, *(uint32_t*)C_value);
 		return status;
 	}
+	return status;
 };
 
 SNMP_ERR_CODES Decode(SNMP_VALUE *snmp_value, SNMP_SYNTAXES syn, void* C_value, uint8_t C_type){
 	SNMP_ERR_CODES status = 0;
 	if((C_type == Text)&&(syn == SNMP_SYNTAX_OCTETS)){
-		status = decodeOctetStringToString(snmp_value, (const char*)locContact, strlen((const char*)locContact));
+		status = decodeOctetStringToString(snmp_value, ( char*)locContact, strlen((const char*)locContact));
 		return status;
 	}
 	if((C_type == Word)&&(syn == SNMP_SYNTAX_INT)){
@@ -814,7 +814,7 @@ SNMP_ERR_CODES Decode(SNMP_VALUE *snmp_value, SNMP_SYNTAXES syn, void* C_value, 
 
 		return status;
 	}
-	
+	return status;
 
 };
 SNMP_API_STAT_CODES SNMP_requestPdu(SNMP_PDU *pdu)
@@ -822,20 +822,24 @@ SNMP_API_STAT_CODES SNMP_requestPdu(SNMP_PDU *pdu)
 	//char *community;
 
 	// sequence length
-	byte seqLen= 0;
+	//byte seqLen= 0;
 	// version
 	byte verLen, verEnd;
 	// community string
 	byte comLen, comEnd;
 	// pdu
-	byte pduTyp, pduLen;
+	byte pduTyp;
+	//byte pduLen;
 	byte ridLen, ridEnd;
 	byte errLen, errEnd;
 	byte eriLen, eriEnd;
-	byte vblTyp, vblLen, vblEnd;
-	byte vbiTyp, vbiLen;
+	//byte vblTyp;
+	byte vblLen, vblEnd;
+	//byte vbiTyp;
+	byte vbiLen;
 	byte obiLen, obiEnd;
-	byte valTyp, valLen, valEnd;
+	byte valTyp, valLen;
+//	byte valEnd;
 	byte i;
 	//
 	// set packet packet size (skip UDP header)
@@ -869,7 +873,7 @@ SNMP_API_STAT_CODES SNMP_requestPdu(SNMP_PDU *pdu)
 	}
 	//
 	// sequence length
-	seqLen = _packet[1];
+	//seqLen = _packet[1];
 	// version
 	verLen = _packet[3];
 	verEnd = 3 + verLen;
@@ -878,14 +882,14 @@ SNMP_API_STAT_CODES SNMP_requestPdu(SNMP_PDU *pdu)
 	comEnd = verEnd + 2 + comLen;
 	// pdu
 	pduTyp = _packet[comEnd + 1];
-	pduLen = _packet[comEnd + 2];
+	//pduLen = _packet[comEnd + 2];
 	ridLen = _packet[comEnd + 4];
 	ridEnd = comEnd + 4 + ridLen;
 	errLen = _packet[ridEnd + 2];
 	errEnd = ridEnd + 2 + errLen;
 	eriLen = _packet[errEnd + 2];
 	eriEnd = errEnd + 2 + eriLen;
-	vblTyp = _packet[eriEnd + 1];
+	//vblTyp = _packet[eriEnd + 1];
 	vblLen = _packet[eriEnd + 2];
 	vblEnd = eriEnd + 2;
 
@@ -894,20 +898,23 @@ SNMP_API_STAT_CODES SNMP_requestPdu(SNMP_PDU *pdu)
 		for ( i = 0; i < ridLen; i++ ) {
 			pdu->requestId = (pdu->requestId << 8) | _packet[comEnd + 5 + i];
 		}
-
+  obiLen = _packet[eriEnd + 6];
+  obiEnd = eriEnd + obiLen + 6;
+  valTyp = _packet[obiEnd + 1];
+  valLen = _packet[obiEnd + 2];
 	pdu->type = (SNMP_PDU_TYPES)pduTyp;
 	if(pdu->type!=SNMP_PDU_GET_BULK){
-		vbiTyp = _packet[eriEnd + 3];
+		//vbiTyp = _packet[eriEnd + 3];
 		vbiLen = _packet[eriEnd + 4];
 		obiLen = _packet[eriEnd + 6];
 		obiEnd = eriEnd + obiLen + 6;
 		valTyp = _packet[obiEnd + 1];
 		valLen = _packet[obiEnd + 2];
-		valEnd = obiEnd + 2 + valLen;
+		//valEnd = obiEnd + 2 + valLen;
 		}
 	else{
 		uint16_t SumLenOfVars = 0;
-		int i=0;
+		//int i=0;
 		BulkValuesCount = 0;
 		while(SumLenOfVars<vblLen){
 			vbiLen = _packet[vblEnd + 2 + SumLenOfVars];
@@ -1163,7 +1170,7 @@ SNMP_API_STAT_CODES SNMP_responsePduGetBulk(SNMP_PDU *pdu)
 		pdu->error = SNMP_ERR_NO_ERROR;
 		pdu->errorIndex = 0;
 	int32_u u;
-	uint16_t varssize;
+	uint16_t varssize = 0;
 	byte i;
 	//
 	// Length of entire SNMP packet
@@ -1309,7 +1316,7 @@ void pduReceived()  // is being called when an SNMP packet has been received
 		Serial.println(SNMP_PDU_GET_NEXT);
 		Serial.println(SNMP_PDU_SET);*/
 		//
-		char tmpOIDfs[SNMP_MAX_OID_LEN];
+		//char tmpOIDfs[SNMP_MAX_OID_LEN];
 		SNMP_OID_toString(pdu.OID, oid);
 
 		#ifdef MODBUS
@@ -1353,7 +1360,7 @@ void pduReceived()  // is being called when an SNMP packet has been received
 	
 		count++;
 	}else if(pdu.type == SNMP_PDU_GET_BULK){
-	LED_On();
+
 	SNMP_responsePduGetBulk(&pdu);
 	}
 	
@@ -1487,7 +1494,7 @@ uint8_t SNMP_Automat(uint8_t event)
 
 extern void resetSNMP(void){
 	SNMP_Automat(0);
-	SerialPrintln("RESET SNMP!!!");
+
 };
 
 #ifdef MODBUS

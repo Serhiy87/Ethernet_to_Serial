@@ -512,7 +512,7 @@ TimersInc(void)
 {	
 
 	uint8_t i, TickCounterVar;	
-	static uint8_t TickCounterVar100 = 0;
+	//static uint8_t TickCounterVar100 = 0;
 	cli();
 	TickCounterVar = TickCounter;
 	TickCounter = 0;
