@@ -40,17 +40,26 @@ typedef uint8_t  byte ;
 //#include "usart.h"
 //#include "modbus.h"
 
-uint8_t		MB_Coil[4];
-uint8_t		MB_Input[4];
-uint16_t	MB_HoldReg[58];
-uint16_t	MB_InReg[80];
+#define MB_TCP_COILS_QT				8	//Должно делится на 8!!
+#define MB_TCP_DISCRETE_INPUTS_QT	8	//Должно делится на 8!!
+#define MB_TCP_HOLDING_REGISTERS_QT 4
+#define MB_TCP_INPUT_REGISTERS_QT   8
+
+
+uint8_t		MB_Coil[MB_TCP_COILS_QT/8];
+uint8_t		MB_Input[MB_TCP_DISCRETE_INPUTS_QT/8];
+uint16_t	MB_HoldReg[MB_TCP_HOLDING_REGISTERS_QT];
+uint16_t	MB_InReg[MB_TCP_INPUT_REGISTERS_QT];
+
+uint16_t MB_Input_Vars[MB_TCP_COILS_QT];
+uint16_t MB_Coil_Vars[MB_TCP_COILS_QT];
 
 #define Modbus_Map_List {				\
 	{									\
-		MB_Coil,		32,				\
-		MB_Input,		32,				\
-		MB_HoldReg,		58,				\
-		MB_InReg,		80				\
+		MB_Coil,		MB_TCP_COILS_QT,				\
+		MB_Input,		MB_TCP_DISCRETE_INPUTS_QT,				\
+		MB_HoldReg,		MB_TCP_HOLDING_REGISTERS_QT,				\
+		MB_InReg,		MB_TCP_INPUT_REGISTERS_QT				\
 	},									\
 }
 
@@ -76,21 +85,24 @@ void MB_AppCycle(){
 
 };
 // ~~~~~~~~~~~~~~
-uint16_t MB_Input_Vars[8];
-uint16_t MB_Coil_Vars[8];
+
 void SNMP_TO_MODUS(){
-	for (uint8_t i = 0; i<8; i++){
-	if(MB_Coil_Vars[i]>0){
-			MB_Coil[0]|=1<<i;
-		}else{
-			MB_Coil[0]&=~(1<<i);
+	for(uint8_t j=0;j<MB_TCP_COILS_QT/8;j++){
+			for (uint8_t i = 0; i<8; i++){
+				if(MB_Coil_Vars[i]>0){
+						MB_Coil[j]|=1<<i;
+					}else{
+						MB_Coil[j]&=~(1<<i);
+					}
+				};
 		}
-	};
 };
 void MODUS_TO_SNMP(){
-	for (uint8_t i = 0; i<8; i++){
-			MB_Input_Vars[i] = ((MB_Input[0])&(1<<i))>0?1:0;
-		};
+	for(uint8_t j=0;j<MB_TCP_DISCRETE_INPUTS_QT/8;j++){
+		for (uint8_t i = 0; i<8; i++){
+				MB_Input_Vars[i+j*8] = ((MB_Input[j])&(1<<i))>0?1:0;
+			};
+	}
 };
 void
 USART_Cycle(void)
@@ -115,10 +127,7 @@ Modbus_ISR(1)
 #include "udp_automat.h"
 
 uint8_t LED_Timer;
-uint8_t myMillisTimer;
-uint32_t myMillis(void){
-	return (1000000 - GetTimer32(myMillisTimer))*10;
-};
+
 #include "TEST_Automat.h"
 #include "Ethernet.h"
 
@@ -162,8 +171,6 @@ void sysInit(){
 	SPI_DDR|=1<<SS_PIN;
 	SPI_PORT|=1<<SS_PIN;
 	TimeInit();
-	myMillisTimer = Timer32Alloc();
-	StartTimer32(myMillisTimer,1000000);
 	TimersInc();
 	#ifdef LOGGING
 		SerialInit();

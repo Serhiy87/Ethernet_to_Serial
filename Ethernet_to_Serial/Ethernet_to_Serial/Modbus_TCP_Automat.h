@@ -221,8 +221,8 @@ int strindex(char *s,char *t)
 #define MB_N_R 125
 #define  MB_N_C 128
 
-  uint16_t R[MB_N_R];
-  uint16_t IR[MB_N_R];
+  uint16_t R[MB_TCP_HOLDING_REGISTERS_QT];
+  uint16_t IR[MB_TCP_INPUT_REGISTERS_QT];
   uint8_t C[MB_N_C];
 enum MB_FC {
 	MB_FC_NONE				   = 0,
@@ -247,53 +247,28 @@ uint16_t word(uint8_t high,uint8_t low){
 #define bitSet(value, bit) ((value) |= (1UL << (bit)))
 #define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
 #define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
+
+void SendErrorWrongAddress(uint8_t *buf){
+	buf[7]|=1<<7;
+	buf[8]|=0x02;	
+	Webserver_send(buf,9);
+}
+
 void ModbusTCPRun(uint8_t FC)
 { 
-/* 
-  Runs = 1 + Runs * (Runs < 999);
 
-  // ****************** Read from socket ****************
-  // For Arduino 0022
-  // Client client = MbServer.available();
-  // For Arduino 1.0
-  EthernetClient client = MbServer.available();
-  if(client.available())
-  {
-    Reads = 1 + Reads * (Reads < 999);
-    int i = 0;
-    while(client.available())
-    {
-      ByteArray[i] = client.read();
-      i++;
-    }
-    SetFC(ByteArray[7]);  //Byte 7 of request is FC
-    if(!Active)
-    {
-      Active = true;
-      PreviousActivityTime = millis();
-      #ifdef MbDebug
-        Serial.println("Mb active");
-      #endif
-    }
-  }
-  if(millis() > (PreviousActivityTime + 60000))
-  {
-    if(Active)
-    {
-      Active = false;
-      #ifdef MbDebug
-        Serial.println("Mb not active");
-      #endif
-    }
-  }
-*/
   uint16_t Start, WordDataLength, ByteDataLength, CoilDataLength, MessageLength;
 
   //****************** Read Coils **********************
   if(FC == MB_FC_READ_COILS)
   {
     Start = word(buf[8],buf[9]);
+
     CoilDataLength = word(buf[10],buf[11]);
+	if(((Start + CoilDataLength) > MB_TCP_COILS_QT)){
+			SendErrorWrongAddress(buf);
+			return;
+	}
     ByteDataLength = CoilDataLength / 8;
     if(ByteDataLength * 8 < CoilDataLength) ByteDataLength++;      
     CoilDataLength = ByteDataLength * 8;
@@ -311,7 +286,9 @@ void ModbusTCPRun(uint8_t FC)
       {
         //bitWrite(buf[9 + i], j, C[Start + i * 8 + j]);
 		#ifdef MODBUS
+		if((i*8+j)<CoilDataLength){
 		bitWrite(buf[9 + i], j, MB_Coil_Vars[Start + i * 8 + j]);
+		}
 		#endif
       }
     }
@@ -327,6 +304,10 @@ void ModbusTCPRun(uint8_t FC)
   {
     Start = word(buf[8],buf[9]);
     CoilDataLength = word(buf[10],buf[11]);
+	if(((Start + CoilDataLength) > MB_TCP_DISCRETE_INPUTS_QT)){
+			SendErrorWrongAddress(buf);
+			return;
+		}
     ByteDataLength = CoilDataLength / 8;
     if(ByteDataLength * 8 < CoilDataLength) ByteDataLength++;      
     CoilDataLength = ByteDataLength * 8;
@@ -343,7 +324,7 @@ void ModbusTCPRun(uint8_t FC)
       for(int j = 0; j < 8; j++)
       {
 		#ifdef MODBUS
-		bitWrite(buf[9 + i], j, MB_Input_Vars[Start + i * 8 + j]);
+			bitWrite(buf[9 + i], j, MB_Input_Vars[Start + i * 8 + j]);
 		#endif
       }
     }
@@ -356,6 +337,10 @@ void ModbusTCPRun(uint8_t FC)
   {
     Start = word(buf[8],buf[9]);
     WordDataLength = word(buf[10],buf[11]);
+	if(((Start + WordDataLength) > MB_TCP_HOLDING_REGISTERS_QT)){
+			SendErrorWrongAddress(buf);
+			return;
+	}
 	//WordDataLength = 11;
     ByteDataLength = WordDataLength * 2;
     #ifdef Modbus_TCP_Automat_LOGGING
@@ -386,6 +371,10 @@ void ModbusTCPRun(uint8_t FC)
     {
 	    Start = word(buf[8],buf[9]);
 	    WordDataLength = word(buf[10],buf[11]);
+		if(((Start + WordDataLength) > MB_TCP_INPUT_REGISTERS_QT)){
+			SendErrorWrongAddress(buf);
+			return;
+		}
 	    ByteDataLength = WordDataLength * 2;
 	    #ifdef Modbus_TCP_Automat_LOGGING
 			SerialPrint(" MB_FC_READ_REGISTERS S=");
@@ -418,6 +407,10 @@ void ModbusTCPRun(uint8_t FC)
   {
     Start = word(buf[8],buf[9]);
   //  C[Start] = word(buf[10],buf[11]) > 0;
+  	if(((Start) > MB_TCP_COILS_QT)){
+			SendErrorWrongAddress(buf);
+	 		return;
+  	}
 	#ifdef MODBUS
 	MB_Coil_Vars[Start] = word(buf[10],buf[11]) > 0;
 	#endif
@@ -440,6 +433,10 @@ void ModbusTCPRun(uint8_t FC)
   if(FC == MB_FC_WRITE_REGISTER)
   {
     Start = word(buf[8],buf[9]);
+	if(((Start) > MB_TCP_HOLDING_REGISTERS_QT)){
+			SendErrorWrongAddress(buf);
+			return;
+	}
     R[Start] = word(buf[10],buf[11]);
 	#ifdef MODBUS
 	 MB_HoldReg[Start] = R[Start];
@@ -462,11 +459,14 @@ void ModbusTCPRun(uint8_t FC)
   //Function codes 15 & 16 by Martin Pettersson http://siamect.com
   if(FC == MB_FC_WRITE_MULTIPLE_COILS)
   {  
-	   uint16_t allCoils = 0;
+	uint16_t allCoils = 0;
     Start = word(buf[8],buf[9]);
     CoilDataLength = word(buf[10],buf[11]);
 	allCoils = CoilDataLength;
-
+	if(((Start + CoilDataLength) > MB_TCP_COILS_QT)){
+		SendErrorWrongAddress(buf);
+		return;
+	}
     ByteDataLength = CoilDataLength / 8;
     if(ByteDataLength * 8 < CoilDataLength) ByteDataLength++;
     CoilDataLength = ByteDataLength * 8;
@@ -503,6 +503,10 @@ void ModbusTCPRun(uint8_t FC)
     Start = word(buf[8],buf[9]);
     WordDataLength = word(buf[10],buf[11]);
     ByteDataLength = WordDataLength * 2;
+	if(((Start + WordDataLength) > MB_TCP_HOLDING_REGISTERS_QT)){
+		SendErrorWrongAddress(buf);
+		return;
+	}
     #ifdef MbDebug
       SerialPrint(" MB_FC_READ_REGISTERS S=");
       SerialPrintUint16_t(Start);
@@ -542,14 +546,14 @@ void ModbusTCPRun(uint8_t FC)
 uint8_t SetFC(int fc)
 {
   uint8_t FC = 0;
-  if(fc == 1) FC = MB_FC_READ_COILS;
-  if(fc == 2) FC = MB_FC_READ_DISCRETE_INPUTS;
-  if(fc == 3) FC = MB_FC_READ_REGISTERS;
-  if(fc == 4) FC = MB_FC_READ_INPUT_REGISTERS;
-  if(fc == 5) FC = MB_FC_WRITE_COIL;
-  if(fc == 6) FC = MB_FC_WRITE_REGISTER;
-  if(fc == 15) FC = MB_FC_WRITE_MULTIPLE_COILS;
-  if(fc == 16) FC = MB_FC_WRITE_MULTIPLE_REGISTERS;
+	  if(fc == 1) FC = MB_FC_READ_COILS;
+	  if(fc == 2) FC = MB_FC_READ_DISCRETE_INPUTS;
+	  if(fc == 3) FC = MB_FC_READ_REGISTERS;
+	  if(fc == 4) FC = MB_FC_READ_INPUT_REGISTERS;
+	  if(fc == 5) FC = MB_FC_WRITE_COIL;
+	  if(fc == 6) FC = MB_FC_WRITE_REGISTER;
+	  if(fc == 15) FC = MB_FC_WRITE_MULTIPLE_COILS;
+	  if(fc == 16) FC = MB_FC_WRITE_MULTIPLE_REGISTERS;
   return FC;
 }
 
@@ -635,9 +639,11 @@ uint8_t Modbus_TCP_Automat(uint8_t event)
 
 
 		case 3:
-				if(Webserver_listen()<=0){
-					state=4;
-					}else{state=1;}
+			if(Webserver_listen()<=0){
+						state=4;
+					}else{
+						state=1;
+						}
 					break;
 					
 		case 4:
@@ -699,28 +705,10 @@ uint8_t Modbus_TCP_Automat(uint8_t event)
 					SerialPrintEndl();
 				#endif
 				 
-				ModbusTCPRun(SetFC(buf[7]));
-				
-				// getidx=strindex((char *)buf,"GET / ");
-				//if(stringOne.indexOf("GET /")>=0){state=10;};
-				//if(stringOne.indexOf("GET /favicon.ico")>=0){state=10;};
-				//if(stringOne.indexOf("GET /t.htm")>=0){state=12;};
-				/*
-				buf[MAX_BUF-1] = '\0';
-
-				if (strstr(buf,"GET /") != NULL) {state=10;}
-				if (strindex((char *)buf,"GET /favicon.ico") >= 0) {state=10;}
-				if (strindex((char *)buf,"GET /t.htm") >= 0) {state=12;}
-				*/
-				//StartTimer16(Timer,1);
-				//_delay_ms(20);
-				//	WebserverSocket_disconnect();
+				ModbusTCPRun(SetFC(buf[7]));			
 				state = 1;
 				break;
-
-
 		case 13:
-
 				WebserverSocket_disconnect();
 				state=1;
 				break;
