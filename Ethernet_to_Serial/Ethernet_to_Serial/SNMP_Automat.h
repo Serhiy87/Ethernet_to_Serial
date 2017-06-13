@@ -1393,7 +1393,7 @@ void pduReceived()  // is being called when an SNMP packet has been received
 	//
 	// Serial << "UDP Packet Received End.." << " RAM:" << freeMemory() << endl;
 }
-extern void resetEthernet(void);
+//extern void resetEthernet(void);
 
 uint8_t SNMP_Automat(uint8_t event)
 {

@@ -147,12 +147,10 @@ static uint8_t state = 0;
 		StartTimer16(LED_Timer,100);
 		if(state == 0){
 				PORTB|=1<<PB7;
-				//PORTG&=~(1<<PG3);
 				state = 1;
 		}
 		else{
 				PORTB&=~(1<<PB7);
-				//PORTG|=1<<PG3;
 				state = 0;
 		}
 	}
@@ -194,7 +192,7 @@ int main(void)
 	Ethernet_Automat(0);
     while (1) 
     {
-		//_delay_ms(100);
+		//_delay_ms(100); - только для тестирования
 		sysCycle();
 		LED_Cycle();
 		Ethernet_Automat(1);
@@ -204,7 +202,7 @@ int main(void)
 		#ifdef MODBUS
 		USART_Cycle();
 		#endif
-	// W5100write(0x1A, 0x55);
+
     }
 }
 

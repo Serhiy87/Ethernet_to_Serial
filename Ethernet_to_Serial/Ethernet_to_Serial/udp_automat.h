@@ -236,7 +236,6 @@ uint8_t _UDPtoSerialSocket_endPacket_Automat(uint8_t event)
                 break;
             }
             writeSnIR(1, SEND_OK);
-
             state=255;
       break;
       case 255:
@@ -294,7 +293,7 @@ uint8_t _dhcpUdpSocket_endPacket_Automat(uint8_t event)
                 else 
                 break;
             }
-              writeSnIR(0, SEND_OK);
+            writeSnIR(0, SEND_OK);
             state=255;
       break;
       case 255:
@@ -636,10 +635,12 @@ int UDP_read(uint8_t _sock)
 int UDP_parsePacket(uint8_t _sock)
 {
   // discard any remaining bytes in the last packet
-  while (_remaining[_sock]) {
+  uint16_t antifreezcounter=0;
+  while ((_remaining[_sock])&&(antifreezcounter<2048)) {
     // could this fail (loop endlessly) if _remaining > 0 and recv in read fails?
     // should only occur if recv fails after telling us the data is there, lets
     // hope the w5100 always behaves :)
+	antifreezcounter++;
     UDP_read(_sock);
   }
 
@@ -697,12 +698,9 @@ int _UDPtoSerialSocket_parsePacket(){
 
 int _dhcpUdpSocket_readBlock(unsigned char* buffer, size_t len)
 {
-
   if (_remaining[0] > 0)
   {
-
     int got;
-
     if (_remaining[0] <= len)
     {
       // data should fit in the buffer
@@ -730,12 +728,9 @@ int _dhcpUdpSocket_readBlock(unsigned char* buffer, size_t len)
 
 int _SNMPSocket_read(unsigned char* buffer, size_t len)
 {
-
   if (_remaining[1] > 0)
   {
-
     int got;
-
     if (_remaining[1] <= len)
     {
       // data should fit in the buffer
@@ -755,10 +750,8 @@ int _SNMPSocket_read(unsigned char* buffer, size_t len)
     }
 
   }
-
   // If we get here, there's no data available or recv failed
   return -1;
-
 }
 uint16_t _dhcpUdpSocket_remotePort(){
   return _remotePort[0];

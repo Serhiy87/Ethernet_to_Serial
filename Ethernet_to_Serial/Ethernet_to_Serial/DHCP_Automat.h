@@ -362,7 +362,7 @@ uint8_t parseDHCPResponse(unsigned long responseTimeout, uint32_t* transactionId
     if(fixedMsg.op == DHCP_BOOTREPLY && _dhcpUdpSocket_remotePort() == DHCP_SERVER_PORT)
     {
         *transactionId = ntohl(fixedMsg.xid);
-/*           #ifdef send_DHCP_MESSAGE_Automat_LOGGING
+/*      #ifdef send_DHCP_MESSAGE_Automat_LOGGING
         Serial.print("Response Transaction ID: ");
         Serial.println(transactionId);
         #endif*/
@@ -620,7 +620,7 @@ uint8_t DHCP_automat(uint8_t event)
 			  SerialPrintUint8_t(_dhcpSubnetMask[3]);
 			  SerialPrintln(";");
 			  #endif
-              //TimeLeasedStart=millis();
+
 			  StartTimer32(TD_DHCP_lease_timer, _renewInSec*100);
               state=255;
               break;         

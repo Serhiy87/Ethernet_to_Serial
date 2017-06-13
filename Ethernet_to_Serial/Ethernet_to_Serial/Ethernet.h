@@ -8,6 +8,10 @@
 
 #ifndef ETHERNET_H_
 #define ETHERNET_H_
+uint8_t Ethernet_Automat(uint8_t event);
+ void resetEthernet(void){
+	 Ethernet_Automat(0);
+ }
 #include "W5100.h"
 #include "udp_automat.h"
 #include "TEST_Automat.h"
@@ -18,12 +22,10 @@
 
 uint8_t DHCP_Enable=1;
 uint8_t static_IP[4]={10,0,0,76};
-uint8_t Ethernet_Automat(uint8_t event);
- void resetEthernet(void){
-	
-	Ethernet_Automat(0);
-	//SerialPrintln("RESET ETHERNET!!!");
-}
+uint8_t static_dhcpGatewayIp[4]={10,0,0,254};
+uint8_t static_dhcpSubnetMask[4]={255,255,255,0};
+
+
 
 uint8_t Ethernet_Automat(uint8_t event){
 	static uint8_t state=0;
@@ -79,6 +81,8 @@ uint8_t Ethernet_Automat(uint8_t event){
 		// W5100_SetMac(0x00, 0xDD, 0xFF, 0x01, 0xDE, 0x02);
 		if(!DHCP_Enable){
 			W5100_SetIP(static_IP[0],static_IP[1],static_IP[2],static_IP[3]);
+			W5100_SetGateway(static_dhcpGatewayIp[0],static_dhcpGatewayIp[1],static_dhcpGatewayIp[2],static_dhcpGatewayIp[3]);
+			W5100_SetMask(static_dhcpSubnetMask[0], static_dhcpSubnetMask[1], static_dhcpSubnetMask[2], static_dhcpSubnetMask[3]);
 		}
 		else
 		{

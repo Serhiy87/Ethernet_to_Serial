@@ -8,6 +8,7 @@
 
 #ifndef W5100_H_
 #define W5100_H_
+
  #define F_CPU 16000000UL
  #include <avr/io.h>
  #include <stdint.h>
@@ -53,10 +54,10 @@ static const uint16_t CH_SIZE = 0x0100;
 #define   Sock_SEND_KEEP  0x22
 #define   Sock_RECV       0x40
 
-  static const uint8_t SEND_OK = 0x10;
-  static const uint8_t TIMEOUT = 0x08;
-  static const uint8_t RECV    = 0x04;
-  static const uint8_t DISCON  = 0x02;
+static const uint8_t SEND_OK = 0x10;
+static const uint8_t TIMEOUT = 0x08;
+static const uint8_t RECV    = 0x04;
+ static const uint8_t DISCON  = 0x02;
   static const uint8_t CON     = 0x01;
 
 #define  RST  7 // Reset BIT
@@ -71,7 +72,7 @@ void SPI_beginTransaction(){};
 void SPI_endTransaction(){};
 void  W5100_init();
 uint8_t SPItransfer(uint8_t data) {
-	// SPI_Init();
+
 	SPDR = data;
 	asm volatile("nop");
 	while (!(SPSR & (1<<SPIF))) ; // wait
@@ -81,23 +82,18 @@ uint8_t SPItransfer(uint8_t data) {
 
   uint8_t W5100write(uint16_t _addr, uint8_t _data)
   {
-	
-	 
 	  SPI_PORT&=~(1<<SS_PIN);
 	  SPItransfer(0xF0);
 	  SPItransfer((uint8_t)(_addr >> 8));
 	  SPItransfer((uint8_t)(_addr & 0xFF));
 	  uint8_t sym = SPItransfer(_data);
 	  if(sym!=3){
-		
-		  	  SPI_PORT|=(1<<SS_PIN);
+    	  SPI_PORT|=(1<<SS_PIN);
 		  W5100_init();
 	  }
 	  SPI_PORT|=(1<<SS_PIN);
-
-
 	  return 1;
-  }
+ }
 
 uint8_t W5100read(uint16_t _addr)
 {
@@ -145,7 +141,7 @@ uint16_t W5100writeBlock(uint16_t _addr, const uint8_t *_buf, uint16_t _len)
 	return _len;
 }
 
-
+void resetEthernet(void);
 void execCmdSn(uint8_t s, uint8_t _cmd) {
 	// Send command to socket
 	W5100write(CH_BASE + s * CH_SIZE + 0x0001, _cmd);
@@ -154,9 +150,9 @@ void execCmdSn(uint8_t s, uint8_t _cmd) {
 	while (W5100read(CH_BASE + s * CH_SIZE + 0x0001)&&(i<255)){
 		i++;		
 		};
-	/*if(i==255){
+	if(i==255){
 		resetEthernet();
-	}*/
+	}
 	
 }
 
@@ -202,15 +198,7 @@ void W5100_init(){
 
 	DDRB|=1<<PB5;
 	PORTB|=1<<PB5;
-/*
-	_delay_ms(200);
-	_delay_ms(200);
-	_delay_ms(200);
-	_delay_ms(200);
-	_delay_ms(200);
-	_delay_ms(200);
-	_delay_ms(200);
-	_delay_ms(200);*/
+
 	PORTB&=~(1<<PB5);
 	_delay_ms(200);
 	DDRE|=1<<PE4;
@@ -227,10 +215,6 @@ void W5100_init(){
 	W5100write(0, 0x80);
 	W5100write(0x1B, 0x55);
 	W5100write(0x1A, 0x55);
-	W5100_SetMac(0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02);
-	W5100_SetIP(10,0,0,76);
-	W5100_SetGateway(10, 0, 0, 254);
-	W5100_SetMask(255, 255, 255, 0);
 	
 }
   
@@ -593,7 +577,6 @@ void W5100_send_data_processing_offset(uint8_t s, uint16_t data_offset, const ui
 	else {
 		W5100writeBlock(dstAddr, data, len);
 	}
-
 	ptr += len;
 	writeSnTX_WR(s, ptr);
 }
@@ -607,7 +590,7 @@ uint16_t W5100_getTXFreeSize(uint8_t s)
 		if (val1 != 0)
 		val = readSnTX_FSR(s);
 	}
-	while ((val != val1)&&(i<65535));
+	while ((val != val1)&&(i<6553));
 	return val;
 };
 uint16_t bufferData(uint8_t s, uint16_t offset, const uint8_t* buf, uint16_t len)
